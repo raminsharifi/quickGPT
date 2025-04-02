@@ -1,7 +1,14 @@
-import AppKit
+//
+//  ResponseView.swift
+//  quick-GPT
+//
+//  Created by Ramin Sharifi on 2025-04-02.
+//
 import SwiftUI
+import AppKit
 
-struct EnhancedResponseView: View {
+// MARK: - Response View
+struct ResponseView: View {
     @State var responseText: String
     @State var promptText: String
     @State private var isTextCopied = false
@@ -9,7 +16,6 @@ struct EnhancedResponseView: View {
     @State private var yOffset: CGFloat = 30
     @State private var selectedMarkdownView = true
     @State private var fontSize: CGFloat = 14
-    @State private var contentBlocks: [ContentBlock] = []
     
     var body: some View {
         ZStack {
@@ -23,7 +29,7 @@ struct EnhancedResponseView: View {
                 .shadow(color: Color.black.opacity(0.2), radius: AppTheme.shadowRadius, x: 0, y: 5)
             
             VStack(alignment: .leading, spacing: 0) {
-                // Title bar with controls (unchanged from original)
+                // Title bar with controls
                 HStack {
                     // Title and prompt info
                     VStack(alignment: .leading, spacing: 2) {
@@ -148,22 +154,19 @@ struct EnhancedResponseView: View {
                 Divider()
                     .padding(.horizontal, 12)
                 
-                // Enhanced response content with code block support
+                // Response content with conditional view based on selected view mode
                 if selectedMarkdownView {
                     ScrollView {
-                        VStack(alignment: .leading, spacing: 8) {
-                            ForEach(contentBlocks) { block in
-                                ContentBlockView(block: block, fontSize: fontSize)
-                            }
-                        }
-                        .padding(16)
-                        .frame(maxWidth: .infinity, alignment: .leading)
+                        Text(LocalizedStringKey(responseText))
+                            .padding(16)
+                            .textSelection(.enabled)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .font(.system(size: fontSize))
                     }
                     .background(Color(.textBackgroundColor).opacity(0.3))
                     .cornerRadius(12)
                     .padding(12)
                 } else {
-                    // Plain text view remains the same
                     ScrollView {
                         Text(responseText)
                             .padding(16)
@@ -190,9 +193,6 @@ struct EnhancedResponseView: View {
         .opacity(opacity)
         .offset(y: yOffset)
         .onAppear {
-            // Parse content blocks
-            contentBlocks = ContentParser.parseContent(responseText)
-            
             // Animate appearance
             withAnimation(.spring(response: AppTheme.appearDuration, dampingFraction: 0.7)) {
                 opacity = 1

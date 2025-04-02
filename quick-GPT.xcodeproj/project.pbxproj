@@ -9,6 +9,8 @@
 /* Begin PBXBuildFile section */
 		109861302D9D89E1002F0D4F /* KeyboardShortcuts in Frameworks */ = {isa = PBXBuildFile; productRef = 1098612F2D9D89E1002F0D4F /* KeyboardShortcuts */; };
 		109861362D9D8F02002F0D4F /* Shimmer in Frameworks */ = {isa = PBXBuildFile; productRef = 109861352D9D8F02002F0D4F /* Shimmer */; };
+		10A7BF222D9DABDE00EAAC01 /* FullCodeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 10A7BF212D9DABDE00EAAC01 /* FullCodeView.swift */; };
+		10A7BF262D9DAC3100EAAC01 /* ResponseWindowController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 10A7BF252D9DAC3100EAAC01 /* ResponseWindowController.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -32,6 +34,8 @@
 		109861002D9D88C5002F0D4F /* quick-GPT.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "quick-GPT.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		1098610E2D9D88C6002F0D4F /* quick-GPTTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "quick-GPTTests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
 		109861182D9D88C6002F0D4F /* quick-GPTUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "quick-GPTUITests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
+		10A7BF212D9DABDE00EAAC01 /* FullCodeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FullCodeView.swift; sourceTree = "<group>"; };
+		10A7BF252D9DAC3100EAAC01 /* ResponseWindowController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ResponseWindowController.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
@@ -86,6 +90,8 @@
 				109861112D9D88C6002F0D4F /* quick-GPTTests */,
 				1098611B2D9D88C6002F0D4F /* quick-GPTUITests */,
 				109861012D9D88C5002F0D4F /* Products */,
+				10A7BF212D9DABDE00EAAC01 /* FullCodeView.swift */,
+				10A7BF252D9DAC3100EAAC01 /* ResponseWindowController.swift */,
 			);
 			sourceTree = "<group>";
 		};
@@ -249,6 +255,8 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				10A7BF222D9DABDE00EAAC01 /* FullCodeView.swift in Sources */,
+				10A7BF262D9DAC3100EAAC01 /* ResponseWindowController.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
