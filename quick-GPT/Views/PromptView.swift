@@ -102,27 +102,29 @@ struct PromptView: View {
                     // Tab buttons first
                     HStack(spacing: 0) {
                         ForEach([Mode.gpt, Mode.search], id: \.self) { tabMode in
-                            ModeTabButton(title: tabMode == .gpt ? "GPT" : "Search", 
-                                         systemImage: tabMode.icon,
-                                         isSelected: mode == tabMode) {
-                                withAnimation(.spring(response: tabAnimationDuration, dampingFraction: 0.7)) {
-                                    previousMode = mode
-                                    mode = tabMode
-                                    // No offset manipulation here
-                                    
-                                    // Animate icon transition
-                                    iconRotation += 180
-                                    iconScale = 0.5
-                                    
-                                    // Reset icon scale after rotation
-                                    DispatchQueue.main.asyncAfter(deadline: .now() + iconAnimationDuration) {
-                                        withAnimation(.spring(response: iconAnimationDuration, dampingFraction: 0.7)) {
-                                            iconScale = 1.0
+                            ModeTabButton(
+                                title: tabMode == .gpt ? "GPT" : "Search", 
+                                systemImage: tabMode.icon,
+                                isSelected: mode == tabMode,
+                                tabWidth: tabWidth,
+                                action: {
+                                    withAnimation(.spring(response: tabAnimationDuration, dampingFraction: 0.7)) {
+                                        previousMode = mode
+                                        mode = tabMode
+                                        
+                                        // Animate icon transition
+                                        iconRotation += 180
+                                        iconScale = 0.5
+                                        
+                                        // Reset icon scale after rotation
+                                        DispatchQueue.main.asyncAfter(deadline: .now() + iconAnimationDuration) {
+                                            withAnimation(.spring(response: iconAnimationDuration, dampingFraction: 0.7)) {
+                                                iconScale = 1.0
+                                            }
                                         }
                                     }
                                 }
-                            }
-                            .frame(width: tabWidth)
+                            )
                             .overlay(
                                 // Place indicator directly under each tab
                                 Rectangle()
@@ -519,6 +521,7 @@ struct ModeTabButton: View {
     let title: String
     let systemImage: String
     let isSelected: Bool
+    let tabWidth: CGFloat
     let action: () -> Void
     
     @State private var isHovered = false
@@ -527,8 +530,12 @@ struct ModeTabButton: View {
         Button(action: action) {
             VStack(spacing: 4) {
                 HStack(spacing: 6) {
-                    Image(systemName: systemImage)
-                        .font(.system(size: 12, weight: isSelected ? .semibold : .regular))
+                    // Only show icon when tab is NOT selected
+                    if !isSelected {
+                        Image(systemName: systemImage)
+                            .font(.system(size: 12, weight: .regular))
+                            .transition(.opacity)
+                    }
                     
                     Text(title)
                         .font(.system(size: 13, weight: isSelected ? .semibold : .regular))
@@ -545,6 +552,7 @@ struct ModeTabButton: View {
                         .animation(.easeInOut(duration: 0.15), value: isHovered)
                 )
             }
+            .frame(width: tabWidth) // Use the passed tabWidth parameter
         }
         .buttonStyle(PlainButtonStyle())
         .foregroundColor(isSelected ? .primary : .gray)

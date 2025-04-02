@@ -65,6 +65,9 @@ class AppDelegate: NSObject, NSApplicationDelegate, PromptWindowDelegate {
     private let statusBarIconConfig = (light: "brain.head.profile", dark: "brain")
     
     func applicationDidFinishLaunching(_ notification: Notification) {
+        // Hide app from Dock
+        NSApp.setActivationPolicy(.accessory)
+        
         setupMenuBar()
         setupKeyboardShortcut()
     }
