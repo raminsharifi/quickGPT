@@ -1,0 +1,595 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 77;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		109861302D9D89E1002F0D4F /* KeyboardShortcuts in Frameworks */ = {isa = PBXBuildFile; productRef = 1098612F2D9D89E1002F0D4F /* KeyboardShortcuts */; };
+		109861362D9D8F02002F0D4F /* Shimmer in Frameworks */ = {isa = PBXBuildFile; productRef = 109861352D9D8F02002F0D4F /* Shimmer */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		1098610F2D9D88C6002F0D4F /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 109860F82D9D88C5002F0D4F /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 109860FF2D9D88C5002F0D4F;
+			remoteInfo = "quick-GPT";
+		};
+		109861192D9D88C6002F0D4F /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 109860F82D9D88C5002F0D4F /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 109860FF2D9D88C5002F0D4F;
+			remoteInfo = "quick-GPT";
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXFileReference section */
+		109861002D9D88C5002F0D4F /* quick-GPT.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "quick-GPT.app"; sourceTree = BUILT_PRODUCTS_DIR; };
+		1098610E2D9D88C6002F0D4F /* quick-GPTTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "quick-GPTTests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
+		109861182D9D88C6002F0D4F /* quick-GPTUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "quick-GPTUITests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
+/* End PBXFileReference section */
+
+/* Begin PBXFileSystemSynchronizedRootGroup section */
+		109861022D9D88C5002F0D4F /* quick-GPT */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = "quick-GPT";
+			sourceTree = "<group>";
+		};
+		109861112D9D88C6002F0D4F /* quick-GPTTests */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = "quick-GPTTests";
+			sourceTree = "<group>";
+		};
+		1098611B2D9D88C6002F0D4F /* quick-GPTUITests */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = "quick-GPTUITests";
+			sourceTree = "<group>";
+		};
+/* End PBXFileSystemSynchronizedRootGroup section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		109860FD2D9D88C5002F0D4F /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				109861362D9D8F02002F0D4F /* Shimmer in Frameworks */,
+				109861302D9D89E1002F0D4F /* KeyboardShortcuts in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		1098610B2D9D88C6002F0D4F /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		109861152D9D88C6002F0D4F /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		109860F72D9D88C5002F0D4F = {
+			isa = PBXGroup;
+			children = (
+				109861022D9D88C5002F0D4F /* quick-GPT */,
+				109861112D9D88C6002F0D4F /* quick-GPTTests */,
+				1098611B2D9D88C6002F0D4F /* quick-GPTUITests */,
+				109861012D9D88C5002F0D4F /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		109861012D9D88C5002F0D4F /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				109861002D9D88C5002F0D4F /* quick-GPT.app */,
+				1098610E2D9D88C6002F0D4F /* quick-GPTTests.xctest */,
+				109861182D9D88C6002F0D4F /* quick-GPTUITests.xctest */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		109860FF2D9D88C5002F0D4F /* quick-GPT */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 109861222D9D88C6002F0D4F /* Build configuration list for PBXNativeTarget "quick-GPT" */;
+			buildPhases = (
+				109860FC2D9D88C5002F0D4F /* Sources */,
+				109860FD2D9D88C5002F0D4F /* Frameworks */,
+				109860FE2D9D88C5002F0D4F /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			fileSystemSynchronizedGroups = (
+				109861022D9D88C5002F0D4F /* quick-GPT */,
+			);
+			name = "quick-GPT";
+			packageProductDependencies = (
+				1098612F2D9D89E1002F0D4F /* KeyboardShortcuts */,
+				109861352D9D8F02002F0D4F /* Shimmer */,
+			);
+			productName = "quick-GPT";
+			productReference = 109861002D9D88C5002F0D4F /* quick-GPT.app */;
+			productType = "com.apple.product-type.application";
+		};
+		1098610D2D9D88C6002F0D4F /* quick-GPTTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 109861252D9D88C6002F0D4F /* Build configuration list for PBXNativeTarget "quick-GPTTests" */;
+			buildPhases = (
+				1098610A2D9D88C6002F0D4F /* Sources */,
+				1098610B2D9D88C6002F0D4F /* Frameworks */,
+				1098610C2D9D88C6002F0D4F /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				109861102D9D88C6002F0D4F /* PBXTargetDependency */,
+			);
+			fileSystemSynchronizedGroups = (
+				109861112D9D88C6002F0D4F /* quick-GPTTests */,
+			);
+			name = "quick-GPTTests";
+			packageProductDependencies = (
+			);
+			productName = "quick-GPTTests";
+			productReference = 1098610E2D9D88C6002F0D4F /* quick-GPTTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
+		109861172D9D88C6002F0D4F /* quick-GPTUITests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 109861282D9D88C6002F0D4F /* Build configuration list for PBXNativeTarget "quick-GPTUITests" */;
+			buildPhases = (
+				109861142D9D88C6002F0D4F /* Sources */,
+				109861152D9D88C6002F0D4F /* Frameworks */,
+				109861162D9D88C6002F0D4F /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				1098611A2D9D88C6002F0D4F /* PBXTargetDependency */,
+			);
+			fileSystemSynchronizedGroups = (
+				1098611B2D9D88C6002F0D4F /* quick-GPTUITests */,
+			);
+			name = "quick-GPTUITests";
+			packageProductDependencies = (
+			);
+			productName = "quick-GPTUITests";
+			productReference = 109861182D9D88C6002F0D4F /* quick-GPTUITests.xctest */;
+			productType = "com.apple.product-type.bundle.ui-testing";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		109860F82D9D88C5002F0D4F /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = 1;
+				LastSwiftUpdateCheck = 1630;
+				LastUpgradeCheck = 1630;
+				TargetAttributes = {
+					109860FF2D9D88C5002F0D4F = {
+						CreatedOnToolsVersion = 16.3;
+					};
+					1098610D2D9D88C6002F0D4F = {
+						CreatedOnToolsVersion = 16.3;
+						TestTargetID = 109860FF2D9D88C5002F0D4F;
+					};
+					109861172D9D88C6002F0D4F = {
+						CreatedOnToolsVersion = 16.3;
+						TestTargetID = 109860FF2D9D88C5002F0D4F;
+					};
+				};
+			};
+			buildConfigurationList = 109860FB2D9D88C5002F0D4F /* Build configuration list for PBXProject "quick-GPT" */;
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+				Base,
+			);
+			mainGroup = 109860F72D9D88C5002F0D4F;
+			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				1098612E2D9D8999002F0D4F /* XCRemoteSwiftPackageReference "KeyboardShortcuts" */,
+				109861342D9D8F02002F0D4F /* XCRemoteSwiftPackageReference "SwiftUI-Shimmer" */,
+			);
+			preferredProjectObjectVersion = 77;
+			productRefGroup = 109861012D9D88C5002F0D4F /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				109860FF2D9D88C5002F0D4F /* quick-GPT */,
+				1098610D2D9D88C6002F0D4F /* quick-GPTTests */,
+				109861172D9D88C6002F0D4F /* quick-GPTUITests */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		109860FE2D9D88C5002F0D4F /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		1098610C2D9D88C6002F0D4F /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		109861162D9D88C6002F0D4F /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		109860FC2D9D88C5002F0D4F /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		1098610A2D9D88C6002F0D4F /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		109861142D9D88C6002F0D4F /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		109861102D9D88C6002F0D4F /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 109860FF2D9D88C5002F0D4F /* quick-GPT */;
+			targetProxy = 1098610F2D9D88C6002F0D4F /* PBXContainerItemProxy */;
+		};
+		1098611A2D9D88C6002F0D4F /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 109860FF2D9D88C5002F0D4F /* quick-GPT */;
+			targetProxy = 109861192D9D88C6002F0D4F /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
+/* Begin XCBuildConfiguration section */
+		109861202D9D88C6002F0D4F /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MACOSX_DEPLOYMENT_TARGET = 15.3;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = macosx;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+			};
+			name = Debug;
+		};
+		109861212D9D88C6002F0D4F /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MACOSX_DEPLOYMENT_TARGET = 15.3;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				SDKROOT = macosx;
+				SWIFT_COMPILATION_MODE = wholemodule;
+			};
+			name = Release;
+		};
+		109861232D9D88C6002F0D4F /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = "quick-GPT/quick_GPT.entitlements";
+				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "Apple Development";
+				CODE_SIGN_STYLE = Automatic;
+				COMBINE_HIDPI_IMAGES = YES;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 5GG57Z8282;
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = "raminsharifi.quick-GPT";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				REGISTER_APP_GROUPS = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+			};
+			name = Debug;
+		};
+		109861242D9D88C6002F0D4F /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = "quick-GPT/quick_GPT.entitlements";
+				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "Apple Development";
+				CODE_SIGN_STYLE = Automatic;
+				COMBINE_HIDPI_IMAGES = YES;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 5GG57Z8282;
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = "raminsharifi.quick-GPT";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				REGISTER_APP_GROUPS = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+			};
+			name = Release;
+		};
+		109861262D9D88C6002F0D4F /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				GENERATE_INFOPLIST_FILE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 15.3;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = "raminsharifi.quick-GPTTests";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_VERSION = 5.0;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/quick-GPT.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/quick-GPT";
+			};
+			name = Debug;
+		};
+		109861272D9D88C6002F0D4F /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				GENERATE_INFOPLIST_FILE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 15.3;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = "raminsharifi.quick-GPTTests";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_VERSION = 5.0;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/quick-GPT.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/quick-GPT";
+			};
+			name = Release;
+		};
+		109861292D9D88C6002F0D4F /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				GENERATE_INFOPLIST_FILE = YES;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = "raminsharifi.quick-GPTUITests";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_VERSION = 5.0;
+				TEST_TARGET_NAME = "quick-GPT";
+			};
+			name = Debug;
+		};
+		1098612A2D9D88C6002F0D4F /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				GENERATE_INFOPLIST_FILE = YES;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = "raminsharifi.quick-GPTUITests";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_VERSION = 5.0;
+				TEST_TARGET_NAME = "quick-GPT";
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		109860FB2D9D88C5002F0D4F /* Build configuration list for PBXProject "quick-GPT" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				109861202D9D88C6002F0D4F /* Debug */,
+				109861212D9D88C6002F0D4F /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		109861222D9D88C6002F0D4F /* Build configuration list for PBXNativeTarget "quick-GPT" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				109861232D9D88C6002F0D4F /* Debug */,
+				109861242D9D88C6002F0D4F /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		109861252D9D88C6002F0D4F /* Build configuration list for PBXNativeTarget "quick-GPTTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				109861262D9D88C6002F0D4F /* Debug */,
+				109861272D9D88C6002F0D4F /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		109861282D9D88C6002F0D4F /* Build configuration list for PBXNativeTarget "quick-GPTUITests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				109861292D9D88C6002F0D4F /* Debug */,
+				1098612A2D9D88C6002F0D4F /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		1098612E2D9D8999002F0D4F /* XCRemoteSwiftPackageReference "KeyboardShortcuts" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/sindresorhus/KeyboardShortcuts";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 2.3.0;
+			};
+		};
+		109861342D9D8F02002F0D4F /* XCRemoteSwiftPackageReference "SwiftUI-Shimmer" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/markiv/SwiftUI-Shimmer";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 1.5.1;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		1098612F2D9D89E1002F0D4F /* KeyboardShortcuts */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 1098612E2D9D8999002F0D4F /* XCRemoteSwiftPackageReference "KeyboardShortcuts" */;
+			productName = KeyboardShortcuts;
+		};
+		109861352D9D8F02002F0D4F /* Shimmer */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 109861342D9D8F02002F0D4F /* XCRemoteSwiftPackageReference "SwiftUI-Shimmer" */;
+			productName = Shimmer;
+		};
+/* End XCSwiftPackageProductDependency section */
+	};
+	rootObject = 109860F82D9D88C5002F0D4F /* Project object */;
+}
