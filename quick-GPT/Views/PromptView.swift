@@ -8,6 +8,10 @@ import AppKit
 import SwiftUI
 
 struct PromptView: View {
+    enum Mode {
+        case gpt, search
+    }
+    
     @State private var promptText = ""
     @State private var isLoading = false
     @State private var recentPrompts: [String] = UserDefaults.standard.stringArray(forKey: "RecentPrompts") ?? []
@@ -15,6 +19,7 @@ struct PromptView: View {
     @FocusState private var isTextFieldFocused: Bool
     @State private var opacity: Double = 0
     @State private var yOffset: CGFloat = 20
+    @State private var mode: Mode = .gpt
     @EnvironmentObject private var coordinator: PromptCoordinator
     
     func forceFocus() {
@@ -53,24 +58,37 @@ struct PromptView: View {
                     )
                 })
                 
+                // Mode selector tabs
+                HStack(spacing: 0) {
+                    ModeTabButton(title: "GPT", systemImage: "brain.head.profile", isSelected: mode == .gpt) {
+                        mode = .gpt
+                    }
+                    
+                    ModeTabButton(title: "Search", systemImage: "magnifyingglass", isSelected: mode == .search) {
+                        mode = .search
+                    }
+                }
+                .padding(.horizontal, 16)
+                .padding(.bottom, 4)
+                
                 HStack {
-                    // Icon with pulsing animation when loading
-                    Image(systemName: "brain.head.profile")
-                        .foregroundColor(AppTheme.primaryColor)
+                    // Icon based on current mode
+                    Image(systemName: mode == .gpt ? "brain.head.profile" : "magnifyingglass")
+                        .foregroundColor(mode == .gpt ? AppTheme.primaryColor : Color.orange)
                         .font(.system(size: AppTheme.iconSize, weight: .medium))
                         .padding(.leading, 16)
                         .shimmering(active: isLoading)
                     
-                    // Main prompt input field
+                    // Main input field
                     ZStack(alignment: .leading) {
                         if promptText.isEmpty && !isTextFieldFocused {
-                            Text("Ask GPT something...")
+                            Text(mode == .gpt ? "Ask GPT something..." : "Search DuckDuckGo...")
                                 .foregroundColor(.gray)
                                 .font(AppTheme.fontRegular)
                                 .padding(.vertical, 12)
                         }
                         
-                        TextField("", text: $promptText, onCommit: sendPrompt)
+                        TextField("", text: $promptText, onCommit: handleSubmit)
                             .textFieldStyle(PlainTextFieldStyle())
                             .padding(.vertical, 12)
                             .focused($isTextFieldFocused)
@@ -80,62 +98,68 @@ struct PromptView: View {
                                     window.close()
                                 }
                             }
+                            .onKeyPress(.tab) {
+                                mode = mode == .gpt ? .search : .gpt
+                                return .handled
+                            }
                     }
                     
                     if !promptText.isEmpty {
-                        // Recently used prompts button
-                        Button(action: {
-                            showingRecentPrompts.toggle()
-                        }) {
-                            Image(systemName: "clock")
-                                .foregroundColor(.gray)
-                                .font(.system(size: AppTheme.iconSize - 2))
-                        }
-                        .buttonStyle(BorderlessButtonStyle())
-                        .popover(isPresented: $showingRecentPrompts) {
-                            VStack(alignment: .leading, spacing: 8) {
-                                Text("Recent Prompts")
-                                    .font(AppTheme.fontHeadline)
-                                    .padding()
-                                
-                                Divider()
-                                
-                                if recentPrompts.isEmpty {
-                                    Text("No recent prompts")
-                                        .foregroundColor(.gray)
+                        // Recently used prompts button (only for GPT mode)
+                        if mode == .gpt {
+                            Button(action: {
+                                showingRecentPrompts.toggle()
+                            }) {
+                                Image(systemName: "clock")
+                                    .foregroundColor(.gray)
+                                    .font(.system(size: AppTheme.iconSize - 2))
+                            }
+                            .buttonStyle(BorderlessButtonStyle())
+                            .popover(isPresented: $showingRecentPrompts) {
+                                VStack(alignment: .leading, spacing: 8) {
+                                    Text("Recent Prompts")
+                                        .font(AppTheme.fontHeadline)
                                         .padding()
-                                } else {
-                                    ScrollView {
-                                        LazyVStack(alignment: .leading, spacing: 4) {
-                                            ForEach(recentPrompts, id: \.self) { prompt in
-                                                Button(action: {
-                                                    promptText = prompt
-                                                    showingRecentPrompts = false
-                                                }) {
-                                                    Text(prompt)
-                                                        .lineLimit(1)
-                                                        .truncationMode(.tail)
-                                                        .foregroundColor(.primary)
-                                                        .padding(.vertical, 6)
-                                                        .padding(.horizontal, 10)
-                                                        .frame(maxWidth: .infinity, alignment: .leading)
+                                    
+                                    Divider()
+                                    
+                                    if recentPrompts.isEmpty {
+                                        Text("No recent prompts")
+                                            .foregroundColor(.gray)
+                                            .padding()
+                                    } else {
+                                        ScrollView {
+                                            LazyVStack(alignment: .leading, spacing: 4) {
+                                                ForEach(recentPrompts, id: \.self) { prompt in
+                                                    Button(action: {
+                                                        promptText = prompt
+                                                        showingRecentPrompts = false
+                                                    }) {
+                                                        Text(prompt)
+                                                            .lineLimit(1)
+                                                            .truncationMode(.tail)
+                                                            .foregroundColor(.primary)
+                                                            .padding(.vertical, 6)
+                                                            .padding(.horizontal, 10)
+                                                            .frame(maxWidth: .infinity, alignment: .leading)
+                                                    }
+                                                    .buttonStyle(PlainButtonStyle())
+                                                    .contentShape(Rectangle())
+                                                    .background(
+                                                        RoundedRectangle(cornerRadius: 6)
+                                                            .fill(Color.gray.opacity(0.1))
+                                                            .padding(.horizontal, 2)
+                                                    )
                                                 }
-                                                .buttonStyle(PlainButtonStyle())
-                                                .contentShape(Rectangle())
-                                                .background(
-                                                    RoundedRectangle(cornerRadius: 6)
-                                                        .fill(Color.gray.opacity(0.1))
-                                                        .padding(.horizontal, 2)
-                                                )
                                             }
+                                            .padding(.horizontal)
                                         }
-                                        .padding(.horizontal)
+                                        .frame(width: 300, height: min(CGFloat(recentPrompts.count * 40), 200))
                                     }
-                                    .frame(width: 300, height: min(CGFloat(recentPrompts.count * 40), 200))
                                 }
                             }
+                            .padding(.trailing, 4)
                         }
-                        .padding(.trailing, 4)
                     }
                     
                     if isLoading {
@@ -145,10 +169,10 @@ struct PromptView: View {
                             .scaleEffect(0.8)
                             .padding(.trailing, 16)
                     } else if !promptText.isEmpty {
-                        // Send button
-                        Button(action: sendPrompt) {
-                            Image(systemName: "paperplane.fill")
-                                .foregroundColor(AppTheme.primaryColor)
+                        // Submit button
+                        Button(action: handleSubmit) {
+                            Image(systemName: mode == .gpt ? "paperplane.fill" : "arrow.right.circle.fill")
+                                .foregroundColor(mode == .gpt ? AppTheme.primaryColor : Color.orange)
                                 .font(.system(size: AppTheme.iconSize, weight: .medium))
                         }
                         .buttonStyle(BorderlessButtonStyle())
@@ -161,7 +185,7 @@ struct PromptView: View {
                 .padding(.bottom, 12)
             }
         }
-        .frame(width: 700, height: 60)
+        .frame(width: 700, height: mode == .gpt ? 80 : 80) // Increased height to accommodate tabs
         .opacity(opacity)
         .offset(y: yOffset)
         .onAppear {
@@ -183,6 +207,35 @@ struct PromptView: View {
                 opacity = 0
                 yOffset = -10
             }
+        }
+    }
+    
+    private func handleSubmit() {
+        switch mode {
+        case .gpt:
+            sendPrompt()
+        case .search:
+            performDuckDuckGoSearch()
+        }
+    }
+    
+    private func performDuckDuckGoSearch() {
+        guard !promptText.isEmpty else { return }
+        
+        let query = promptText.trimmingCharacters(in: .whitespacesAndNewlines)
+        promptText = ""
+        
+        // Close the prompt window
+        DispatchQueue.main.async {
+            if let window = NSApplication.shared.windows.first(where: { $0.isVisible && $0.contentView is NSHostingView<PromptView> }) {
+                window.close()
+            }
+        }
+        
+        // Encode the query for URL
+        if let encodedQuery = query.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed),
+           let url = URL(string: "https://duckduckgo.com/?q=\(encodedQuery)") {
+            NSWorkspace.shared.open(url)
         }
     }
     
@@ -358,5 +411,32 @@ struct PromptView: View {
         }
         
         throw lastError ?? URLError(.unknown)
+    }
+}
+
+// Tab button for mode selection
+struct ModeTabButton: View {
+    let title: String
+    let systemImage: String
+    let isSelected: Bool
+    let action: () -> Void
+    
+    var body: some View {
+        Button(action: action) {
+            HStack(spacing: 4) {
+                Image(systemName: systemImage)
+                    .font(.system(size: 12))
+                Text(title)
+                    .font(.system(size: 12, weight: isSelected ? .semibold : .regular))
+            }
+            .padding(.vertical, 4)
+            .padding(.horizontal, 8)
+            .background(
+                RoundedRectangle(cornerRadius: 6)
+                    .fill(isSelected ? Color.gray.opacity(0.2) : Color.clear)
+            )
+        }
+        .buttonStyle(PlainButtonStyle())
+        .foregroundColor(isSelected ? .primary : .gray)
     }
 }
