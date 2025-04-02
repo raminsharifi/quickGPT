@@ -4,23 +4,18 @@ import KeyboardShortcuts
 import Combine
 import Shimmer
 
-// Custom NSWindow subclass to allow borderless windows to become key windows
+// MARK: - Custom Window
 class CustomWindow: NSWindow {
-    override var canBecomeKey: Bool {
-        return true
-    }
-    
-    override var canBecomeMain: Bool {
-        return true
-    }
+    override var canBecomeKey: Bool { return true }
+    override var canBecomeMain: Bool { return true }
 }
 
-// Define keyboard shortcut extension
+// MARK: - Keyboard Shortcuts
 extension KeyboardShortcuts.Name {
     static let togglePromptWindow = Self("togglePromptWindow")
 }
 
-// Model for API response
+// MARK: - Models
 struct GPTResponse: Decodable {
     let choices: [Choice]
     
@@ -33,7 +28,24 @@ struct GPTResponse: Decodable {
     }
 }
 
-// Main app class
+// MARK: - Theme
+struct AppTheme {
+    static let primaryColor = Color.blue
+    static let accentColor = Color(red: 0.0, green: 0.5, blue: 1.0)
+    static let backgroundOpacity = 0.95
+    static let cornerRadius: CGFloat = 20
+    static let shadowRadius: CGFloat = 15
+    static let fontRegular = Font.system(size: 14)
+    static let fontHeadline = Font.system(size: 16, weight: .semibold)
+    static let fontCaption = Font.system(size: 12)
+    static let iconSize: CGFloat = 16
+    
+    // Animation durations
+    static let appearDuration = 0.3
+    static let disappearDuration = 0.2
+}
+
+// MARK: - Main App
 @main
 struct GPTMenuBarApp: App {
     @NSApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
@@ -45,31 +57,58 @@ struct GPTMenuBarApp: App {
     }
 }
 
-// App delegate to handle application lifecycle
+// MARK: - App Delegate
 class AppDelegate: NSObject, NSApplicationDelegate, PromptWindowDelegate {
-    var statusItem: NSStatusItem?
-    var promptWindowController: PromptWindowController?
-    var responseWindowController: ResponseWindowController?
+    private var statusItem: NSStatusItem?
+    private var promptWindowController: PromptWindowController?
+    private var responseWindowController: ResponseWindowController?
+    private let statusBarIconConfig = (light: "brain.head.profile", dark: "brain")
     
     func applicationDidFinishLaunching(_ notification: Notification) {
-        // Set up menu bar item
+        setupMenuBar()
+        setupKeyboardShortcut()
+    }
+    
+    private func setupMenuBar() {
         statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
         
         if let button = statusItem?.button {
-            button.image = NSImage(systemSymbolName: "brain", accessibilityDescription: "GPT")
+            // Determine if we're in dark mode
+            let isDarkMode = NSApp.effectiveAppearance.bestMatch(from: [.darkAqua, .aqua]) == .darkAqua
+            let iconName = isDarkMode ? statusBarIconConfig.dark : statusBarIconConfig.light
+            
+            button.image = NSImage(systemSymbolName: iconName, accessibilityDescription: "GPT")
             button.action = #selector(togglePromptWindow)
+            
+            // Update icon when appearance changes
+            DistributedNotificationCenter.default.addObserver(
+                self,
+                selector: #selector(updateMenuBarIcon),
+                name: NSNotification.Name("AppleInterfaceThemeChangedNotification"),
+                object: nil
+            )
         }
         
         // Set up menu
         let menu = NSMenu()
-        menu.addItem(NSMenuItem(title: "Open", action: #selector(togglePromptWindow), keyEquivalent: ""))
+        menu.addItem(NSMenuItem(title: "New Prompt", action: #selector(togglePromptWindow), keyEquivalent: "n"))
         menu.addItem(NSMenuItem.separator())
         menu.addItem(NSMenuItem(title: "Preferences", action: #selector(openPreferences), keyEquivalent: ","))
+        menu.addItem(NSMenuItem(title: "About", action: #selector(openAbout), keyEquivalent: ""))
         menu.addItem(NSMenuItem.separator())
         menu.addItem(NSMenuItem(title: "Quit", action: #selector(NSApplication.terminate(_:)), keyEquivalent: "q"))
         statusItem?.menu = menu
-        
-        // Set up keyboard shortcut
+    }
+    
+    @objc private func updateMenuBarIcon() {
+        if let button = statusItem?.button {
+            let isDarkMode = NSApp.effectiveAppearance.bestMatch(from: [.darkAqua, .aqua]) == .darkAqua
+            let iconName = isDarkMode ? statusBarIconConfig.dark : statusBarIconConfig.light
+            button.image = NSImage(systemSymbolName: iconName, accessibilityDescription: "GPT")
+        }
+    }
+    
+    private func setupKeyboardShortcut() {
         KeyboardShortcuts.onKeyUp(for: .togglePromptWindow) { [weak self] in
             self?.togglePromptWindow()
         }
@@ -81,20 +120,16 @@ class AppDelegate: NSObject, NSApplicationDelegate, PromptWindowDelegate {
     }
     
     @objc func togglePromptWindow() {
-        // Always create a new prompt window controller to reset state
         promptWindowController = PromptWindowController()
         promptWindowController?.delegate = self
         
-        // Explicitly show and focus the window
         promptWindowController?.showWindow(nil)
         if let window = promptWindowController?.window {
             window.makeKeyAndOrderFront(nil)
         }
         
-        // Bring app to front and activate it
         NSApplication.shared.activate(ignoringOtherApps: true)
         
-        // Ensure focus after a short delay to let the window render
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
             if let contentView = self.promptWindowController?.window?.contentView as? NSHostingView<PromptView> {
                 contentView.rootView.forceFocus()
@@ -108,41 +143,38 @@ class AppDelegate: NSObject, NSApplicationDelegate, PromptWindowDelegate {
         NSApplication.shared.activate(ignoringOtherApps: true)
     }
     
+    @objc func openAbout() {
+        let aboutWindowController = AboutWindowController()
+        aboutWindowController.showWindow(nil)
+        NSApplication.shared.activate(ignoringOtherApps: true)
+    }
+    
     func showResponse(text: String) {
-        print("Showing response: \(text.prefix(20))...")  // Debug log
-        
-        // Run on main thread to be safe
         DispatchQueue.main.async {
-            // Always create a new response window controller for each response
-            // This ensures we don't show old responses
             let responseWindowController = ResponseWindowController(responseText: text)
-            
-            // Keep a reference to prevent it from being deallocated
             self.responseWindowController = responseWindowController
             
-            // Show the window and make it key
             responseWindowController.showWindow(nil)
             responseWindowController.window?.makeKeyAndOrderFront(nil)
             
-            // Ensure app is in front
             NSApplication.shared.activate(ignoringOtherApps: true)
         }
     }
 }
 
-// Protocol for prompt window communication
+// MARK: - Protocols
 protocol PromptWindowDelegate: AnyObject {
     func showResponse(text: String)
 }
 
-// Window controller for the prompt input
-class PromptWindowController: NSWindowController, NSWindowDelegate, PromptWindowDelegate {
+// MARK: - Prompt Window Controller
+class PromptWindowController: NSWindowController, NSWindowDelegate {
     weak var delegate: PromptWindowDelegate?
     private var promptCoordinator: PromptCoordinator!
     
     init() {
         let window = CustomWindow(
-            contentRect: NSRect(x: 0, y: 0, width: 600, height: 60),
+            contentRect: NSRect(x: 0, y: 0, width: 700, height: 60),
             styleMask: [.borderless],
             backing: .buffered,
             defer: false
@@ -155,29 +187,19 @@ class PromptWindowController: NSWindowController, NSWindowDelegate, PromptWindow
         window.isOpaque = false
         window.hasShadow = true
         window.level = .floating
-        window.makeFirstResponder(nil) // Clear first responder to ensure our text field gets focus
         
         super.init(window: window)
         
         window.delegate = self
         
-        // Create a coordinator instance and set the delegate
         promptCoordinator = PromptCoordinator()
         promptCoordinator.delegate = self
         
-        // Use a hosted promptView with environment object for communication
         let promptView = PromptView()
             .environmentObject(promptCoordinator)
         
         window.contentView = NSHostingView(rootView: promptView)
-        
-        // Force the window to become key to ensure it receives keyboard input
         window.makeKeyAndOrderFront(nil)
-        
-        // Add a slight delay to ensure the UI is fully loaded before focusing
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
-            NSApp.activate(ignoringOtherApps: true)
-        }
     }
     
     required init?(coder: NSCoder) {
@@ -187,21 +209,21 @@ class PromptWindowController: NSWindowController, NSWindowDelegate, PromptWindow
     func windowDidResignKey(_ notification: Notification) {
         window?.close()
     }
-    
+}
+
+extension PromptWindowController: PromptWindowDelegate {
     func showResponse(text: String) {
         delegate?.showResponse(text: text)
     }
 }
 
-// Window controller for the response display
+// MARK: - Response Window Controller
 class ResponseWindowController: NSWindowController, NSWindowDelegate {
     private var eventMonitor: Any?
     
     init(responseText: String) {
-        print("Creating response window with text: \(responseText.prefix(20))...")  // Debug log
-        
         let window = CustomWindow(
-            contentRect: NSRect(x: 0, y: 0, width: 600, height: 400),
+            contentRect: NSRect(x: 0, y: 0, width: 700, height: 500),
             styleMask: [.borderless, .resizable],
             backing: .buffered,
             defer: false
@@ -213,22 +235,19 @@ class ResponseWindowController: NSWindowController, NSWindowDelegate {
         window.backgroundColor = .clear
         window.isOpaque = false
         window.hasShadow = true
-        
-        // Set a unique identifier to help with window management
         window.identifier = NSUserInterfaceItemIdentifier("GPTResponseWindow")
         
         super.init(window: window)
         
         window.delegate = self
         
-        // Get the last prompt to display in the response window
         let lastPrompt = UserDefaults.standard.string(forKey: "LastPrompt") ?? "Unknown Prompt"
         let responseView = ResponseView(responseText: responseText, promptText: lastPrompt)
         window.contentView = NSHostingView(rootView: responseView)
         
         // Set up escape key handling to close window
         eventMonitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { [weak self] event in
-            if event.keyCode == 53 { // 53 is the key code for Escape
+            if event.keyCode == 53 { // 53 is Escape
                 self?.window?.close()
                 return nil // Consume the event
             }
@@ -240,13 +259,6 @@ class ResponseWindowController: NSWindowController, NSWindowDelegate {
         fatalError("init(coder:) has not been implemented")
     }
     
-    func updateResponse(text: String) {
-        if let contentView = window?.contentView as? NSHostingView<ResponseView> {
-            contentView.rootView.responseText = text
-        }
-    }
-    
-    // Clean up event monitor when window is closed
     func windowWillClose(_ notification: Notification) {
         if let eventMonitor = eventMonitor {
             NSEvent.removeMonitor(eventMonitor)
@@ -261,7 +273,31 @@ class ResponseWindowController: NSWindowController, NSWindowDelegate {
     }
 }
 
-// Coordinator class to handle delegation between SwiftUI and AppKit
+// MARK: - About Window Controller
+class AboutWindowController: NSWindowController {
+    init() {
+        let window = NSWindow(
+            contentRect: NSRect(x: 0, y: 0, width: 400, height: 300),
+            styleMask: [.titled, .closable],
+            backing: .buffered,
+            defer: false
+        )
+        
+        window.center()
+        window.title = "About GPT Menu Bar"
+        
+        super.init(window: window)
+        
+        let aboutView = AboutView()
+        window.contentView = NSHostingView(rootView: aboutView)
+    }
+    
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+}
+
+// MARK: - Coordinator
 class PromptCoordinator: ObservableObject {
     weak var delegate: PromptWindowDelegate?
     
@@ -270,34 +306,35 @@ class PromptCoordinator: ObservableObject {
     }
 }
 
-// SwiftUI view for the prompt input
+// MARK: - Prompt View
 struct PromptView: View {
     @State private var promptText = ""
     @State private var isLoading = false
+    @State private var recentPrompts: [String] = UserDefaults.standard.stringArray(forKey: "RecentPrompts") ?? []
+    @State private var showingRecentPrompts = false
     @FocusState private var isTextFieldFocused: Bool
     @State private var opacity: Double = 0
     @State private var yOffset: CGFloat = 20
     @EnvironmentObject private var coordinator: PromptCoordinator
     
-    // Method to force focus from outside
     func forceFocus() {
         self.isTextFieldFocused = true
     }
     
     var body: some View {
         ZStack {
-            // Background with blur and rounded corners
-            RoundedRectangle(cornerRadius: 20)
-                .fill(Color(.windowBackgroundColor).opacity(0.9))
+            // Background
+            RoundedRectangle(cornerRadius: AppTheme.cornerRadius)
+                .fill(Color(.windowBackgroundColor).opacity(AppTheme.backgroundOpacity))
                 .background(
                     VisualEffectView(material: .hudWindow, blendingMode: .behindWindow)
-                        .clipShape(RoundedRectangle(cornerRadius: 20))
+                        .clipShape(RoundedRectangle(cornerRadius: AppTheme.cornerRadius))
                 )
-                .shadow(color: Color.black.opacity(0.2), radius: 15, x: 0, y: 5)
+                .shadow(color: Color.black.opacity(0.2), radius: AppTheme.shadowRadius, x: 0, y: 5)
             
             VStack(spacing: 0) {
+                // Drag handle
                 HStack {
-                    // Custom drag handle for window movement
                     Rectangle()
                         .fill(Color.gray.opacity(0.3))
                         .frame(width: 40, height: 4)
@@ -308,7 +345,6 @@ struct PromptView: View {
                 .frame(maxWidth: .infinity)
                 .contentShape(Rectangle())
                 .gesture(DragGesture().onChanged { value in
-                    // Move the window when dragging the handle
                     NSApplication.shared.keyWindow?.setFrameOrigin(
                         NSPoint(
                             x: NSApplication.shared.keyWindow!.frame.origin.x + value.location.x - value.startLocation.x,
@@ -318,60 +354,132 @@ struct PromptView: View {
                 })
                 
                 HStack {
-                    Image(systemName: "brain")
-                        .foregroundColor(.blue)
-                        .font(.system(size: 16, weight: .medium))
+                    // Icon with pulsing animation when loading
+                    Image(systemName: "brain.head.profile")
+                        .foregroundColor(AppTheme.primaryColor)
+                        .font(.system(size: AppTheme.iconSize, weight: .medium))
                         .padding(.leading, 16)
                         .shimmering(active: isLoading)
                     
-                    TextField("Ask GPT something...", text: $promptText, onCommit: sendPrompt)
-                        .textFieldStyle(PlainTextFieldStyle())
-                        .padding(.vertical, 12)
-                        .focused($isTextFieldFocused)
-                        .font(.system(size: 14))
-                        .onExitCommand {
-                            // Handle escape key explicitly
-                            if let window = NSApplication.shared.keyWindow {
-                                window.close()
+                    // Main prompt input field
+                    ZStack(alignment: .leading) {
+                        if promptText.isEmpty && !isTextFieldFocused {
+                            Text("Ask GPT something...")
+                                .foregroundColor(.gray)
+                                .font(AppTheme.fontRegular)
+                                .padding(.vertical, 12)
+                        }
+                        
+                        TextField("", text: $promptText, onCommit: sendPrompt)
+                            .textFieldStyle(PlainTextFieldStyle())
+                            .padding(.vertical, 12)
+                            .focused($isTextFieldFocused)
+                            .font(AppTheme.fontRegular)
+                            .onExitCommand {
+                                if let window = NSApplication.shared.keyWindow {
+                                    window.close()
+                                }
+                            }
+                    }
+                    
+                    if !promptText.isEmpty {
+                        // Recently used prompts button
+                        Button(action: {
+                            showingRecentPrompts.toggle()
+                        }) {
+                            Image(systemName: "clock")
+                                .foregroundColor(.gray)
+                                .font(.system(size: AppTheme.iconSize - 2))
+                        }
+                        .buttonStyle(BorderlessButtonStyle())
+                        .popover(isPresented: $showingRecentPrompts) {
+                            VStack(alignment: .leading, spacing: 8) {
+                                Text("Recent Prompts")
+                                    .font(AppTheme.fontHeadline)
+                                    .padding()
+                                
+                                Divider()
+                                
+                                if recentPrompts.isEmpty {
+                                    Text("No recent prompts")
+                                        .foregroundColor(.gray)
+                                        .padding()
+                                } else {
+                                    ScrollView {
+                                        LazyVStack(alignment: .leading, spacing: 4) {
+                                            ForEach(recentPrompts, id: \.self) { prompt in
+                                                Button(action: {
+                                                    promptText = prompt
+                                                    showingRecentPrompts = false
+                                                }) {
+                                                    Text(prompt)
+                                                        .lineLimit(1)
+                                                        .truncationMode(.tail)
+                                                        .foregroundColor(.primary)
+                                                        .padding(.vertical, 6)
+                                                        .padding(.horizontal, 10)
+                                                        .frame(maxWidth: .infinity, alignment: .leading)
+                                                }
+                                                .buttonStyle(PlainButtonStyle())
+                                                .contentShape(Rectangle())
+                                                .background(
+                                                    RoundedRectangle(cornerRadius: 6)
+                                                        .fill(Color.gray.opacity(0.1))
+                                                        .padding(.horizontal, 2)
+                                                )
+                                            }
+                                        }
+                                        .padding(.horizontal)
+                                    }
+                                    .frame(width: 300, height: min(CGFloat(recentPrompts.count * 40), 200))
+                                }
                             }
                         }
+                        .padding(.trailing, 4)
+                    }
                     
                     if isLoading {
+                        // Loading indicator
                         ProgressView()
                             .progressViewStyle(CircularProgressViewStyle())
                             .scaleEffect(0.8)
                             .padding(.trailing, 16)
                     } else if !promptText.isEmpty {
+                        // Send button
                         Button(action: sendPrompt) {
-                            Image(systemName: "arrow.up.circle.fill")
-                                .foregroundColor(.blue)
-                                .font(.system(size: 16, weight: .medium))
+                            Image(systemName: "paperplane.fill")
+                                .foregroundColor(AppTheme.primaryColor)
+                                .font(.system(size: AppTheme.iconSize, weight: .medium))
                         }
                         .buttonStyle(BorderlessButtonStyle())
                         .padding(.trailing, 16)
                         .contentShape(Rectangle())
+                        .keyboardShortcut(.return, modifiers: .command)
                         .transition(.scale.combined(with: .opacity))
                     }
                 }
                 .padding(.bottom, 12)
             }
         }
-        .frame(width: 600, height: 60)
+        .frame(width: 700, height: 60)
         .opacity(opacity)
         .offset(y: yOffset)
         .onAppear {
-            withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
+            withAnimation(.spring(response: AppTheme.appearDuration, dampingFraction: 0.7)) {
                 opacity = 1
                 yOffset = 0
             }
             
-            // Focus on the text field after a short delay to ensure UI is ready
+            // Load recent prompts
+            recentPrompts = UserDefaults.standard.stringArray(forKey: "RecentPrompts") ?? []
+            
+            // Focus on the text field
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
                 isTextFieldFocused = true
             }
         }
         .onDisappear {
-            withAnimation(.easeIn(duration: 0.2)) {
+            withAnimation(.easeIn(duration: AppTheme.disappearDuration)) {
                 opacity = 0
                 yOffset = -10
             }
@@ -381,35 +489,34 @@ struct PromptView: View {
     private func sendPrompt() {
         guard !promptText.isEmpty else { return }
         
-        let prompt = promptText
+        let prompt = promptText.trimmingCharacters(in: .whitespacesAndNewlines)
         promptText = ""
         isLoading = true
         
-        // Store the prompt for future reference
+        // Save to recent prompts
+        saveToRecentPrompts(prompt: prompt)
+        
+        // Store the prompt for reference
         UserDefaults.standard.set(prompt, forKey: "LastPrompt")
         
-        // Close the prompt window immediately after submitting
+        // Close the prompt window
         DispatchQueue.main.async {
             if let window = NSApplication.shared.windows.first(where: { $0.isVisible && $0.contentView is NSHostingView<PromptView> }) {
                 window.close()
             }
         }
         
-        // Make API request to GPT server
+        // Make API request
         Task {
             do {
-                print("Sending prompt: \(prompt)")  // Debug log
                 let response = try await requestGPTResponse(prompt: prompt)
                 isLoading = false
                 
-                // Show response in a new window
                 DispatchQueue.main.async {
-                    print("Got response, sending to delegate")  // Debug log
                     coordinator.showResponse(text: response)
                 }
             } catch {
                 isLoading = false
-                print("Error occurred: \(error.localizedDescription)")  // Debug log
                 DispatchQueue.main.async {
                     coordinator.showResponse(text: "Error: \(error.localizedDescription)")
                 }
@@ -417,12 +524,25 @@ struct PromptView: View {
         }
     }
     
-    private func requestGPTResponse(prompt: String) async throws -> String {
-        // For debugging purposes, return a mock response
-//        print("Simulating API response for debugging")
-//        return "This is a simulated response to your prompt: \"\(prompt)\". The GPT API wasn't actually called to avoid potential API connectivity issues during development."
+    private func saveToRecentPrompts(prompt: String) {
+        var prompts = UserDefaults.standard.stringArray(forKey: "RecentPrompts") ?? []
         
-//        Comment out the real implementation for now
+        // Remove if already exists to avoid duplicates
+        prompts.removeAll(where: { $0 == prompt })
+        
+        // Add to the beginning
+        prompts.insert(prompt, at: 0)
+        
+        // Keep only the 15 most recent
+        if prompts.count > 15 {
+            prompts = Array(prompts.prefix(15))
+        }
+        
+        UserDefaults.standard.set(prompts, forKey: "RecentPrompts")
+        self.recentPrompts = prompts
+    }
+    
+    private func requestGPTResponse(prompt: String) async throws -> String {
         // Network connectivity check
         guard let reachable = try? await checkNetworkConnectivity() else {
             return "Network connectivity issue. Please check your internet connection and try again."
@@ -432,10 +552,10 @@ struct PromptView: View {
             return "No internet connection. Please check your network settings and try again."
         }
         
-        // Replace with your actual API endpoint and key
+        // Get API credentials
         let apiKey = UserDefaults.standard.string(forKey: "GPTAPIKey") ?? ""
         if apiKey.isEmpty {
-            return "API Key not configured. Please set your API key in Preferences (click the menu bar icon and select Preferences)."
+            return "API Key not configured. Please set your API key in Preferences."
         }
         
         let urlString = UserDefaults.standard.string(forKey: "GPTEndpoint") ?? "https://api.openai.com/v1/chat/completions"
@@ -448,12 +568,13 @@ struct PromptView: View {
         request.httpMethod = "POST"
         request.addValue("application/json", forHTTPHeaderField: "Content-Type")
         request.addValue("Bearer \(apiKey)", forHTTPHeaderField: "Authorization")
-        request.timeoutInterval = 30 // Increase timeout to 30 seconds
+        request.timeoutInterval = 45 // Increased timeout
         
-        // Create request body
+        // Request body with system message for better responses
         let requestBody: [String: Any] = [
             "model": UserDefaults.standard.string(forKey: "GPTModel") ?? "gpt-4",
             "messages": [
+                ["role": "system", "content": "You are a helpful assistant responding to queries from a menu bar app."],
                 ["role": "user", "content": prompt]
             ],
             "temperature": 0.7
@@ -502,7 +623,6 @@ struct PromptView: View {
             }
             return "Error: \(error.localizedDescription)"
         }
-//        */
     }
     
     // Helper function to check network connectivity
@@ -531,7 +651,7 @@ struct PromptView: View {
                 retries += 1
                 
                 if retries <= maxRetries {
-                    // Exponential backoff: wait 2^retries seconds before retrying
+                    // Exponential backoff
                     try await Task.sleep(nanoseconds: UInt64(pow(2.0, Double(retries)) * 1_000_000_000))
                 }
             }
@@ -541,44 +661,45 @@ struct PromptView: View {
     }
 }
 
-// SwiftUI view for displaying the response
+// MARK: - Response View
 struct ResponseView: View {
     @State var responseText: String
     @State var promptText: String
     @State private var isTextCopied = false
     @State private var opacity: Double = 0
     @State private var yOffset: CGFloat = 30
-    @State private var isDragging = false
-    @State private var dragOffset = CGSize.zero
-    
-    init(responseText: String, promptText: String = "") {
-        self._responseText = State(initialValue: responseText)
-        self._promptText = State(initialValue: promptText)
-    }
+    @State private var selectedMarkdownView = true
+    @State private var fontSize: CGFloat = 14
     
     var body: some View {
         ZStack {
-            // Background with blur and rounded corners
-            RoundedRectangle(cornerRadius: 20)
-                .fill(Color(.windowBackgroundColor).opacity(0.9))
+            // Background
+            RoundedRectangle(cornerRadius: AppTheme.cornerRadius)
+                .fill(Color(.windowBackgroundColor).opacity(AppTheme.backgroundOpacity))
                 .background(
                     VisualEffectView(material: .hudWindow, blendingMode: .behindWindow)
-                        .clipShape(RoundedRectangle(cornerRadius: 20))
+                        .clipShape(RoundedRectangle(cornerRadius: AppTheme.cornerRadius))
                 )
-                .shadow(color: Color.black.opacity(0.2), radius: 15, x: 0, y: 5)
+                .shadow(color: Color.black.opacity(0.2), radius: AppTheme.shadowRadius, x: 0, y: 5)
             
             VStack(alignment: .leading, spacing: 0) {
-                // Custom title bar with grab handle
+                // Title bar with controls
                 HStack {
-                    // Title area
+                    // Title and prompt info
                     VStack(alignment: .leading, spacing: 2) {
-                        Text("GPT Response")
-                            .font(.headline)
-                            .foregroundColor(.primary)
+                        HStack {
+                            Image(systemName: "brain.head.profile")
+                                .foregroundColor(AppTheme.primaryColor)
+                                .font(.system(size: AppTheme.iconSize))
+                            
+                            Text("GPT Response")
+                                .font(AppTheme.fontHeadline)
+                                .foregroundColor(.primary)
+                        }
                         
                         if !promptText.isEmpty {
                             Text("Prompt: \"\(promptText)\"")
-                                .font(.caption)
+                                .font(AppTheme.fontCaption)
                                 .foregroundColor(.secondary)
                                 .lineLimit(1)
                         }
@@ -589,6 +710,30 @@ struct ResponseView: View {
                     
                     // Action buttons
                     HStack(spacing: 12) {
+                        // Font size controls
+                        Group {
+                            Button(action: { fontSize = max(fontSize - 1, 10) }) {
+                                Image(systemName: "textformat.size.smaller")
+                                    .font(.system(size: 12))
+                            }
+                            .buttonStyle(BorderlessButtonStyle())
+                            
+                            Button(action: { fontSize = min(fontSize + 1, 20) }) {
+                                Image(systemName: "textformat.size.larger")
+                                    .font(.system(size: 12))
+                            }
+                            .buttonStyle(BorderlessButtonStyle())
+                        }
+                        
+                        // Toggle between markdown and plain text views
+                        Button(action: { selectedMarkdownView.toggle() }) {
+                            Image(systemName: selectedMarkdownView ? "doc.plaintext" : "doc.richtext")
+                                .font(.system(size: 12))
+                        }
+                        .buttonStyle(BorderlessButtonStyle())
+                        .help(selectedMarkdownView ? "View as plain text" : "View with formatting")
+                        
+                        // Copy button
                         Button(action: {
                             NSPasteboard.general.clearContents()
                             NSPasteboard.general.setString(responseText, forType: .string)
@@ -615,20 +760,19 @@ struct ResponseView: View {
                         }
                         .buttonStyle(BorderlessButtonStyle())
                         .contentShape(Rectangle())
+                        .keyboardShortcut("c", modifiers: .command)
                         
+                        // Close button
                         Button(action: {
-                            // Find window by identifier to be more precise
                             if let window = NSApplication.shared.windows.first(where: {
                                 $0.identifier == NSUserInterfaceItemIdentifier("GPTResponseWindow")
                             }) {
-                                // Add animation before closing
-                                withAnimation(.easeIn(duration: 0.2)) {
+                                withAnimation(.easeIn(duration: AppTheme.disappearDuration)) {
                                     opacity = 0
                                     yOffset = -10
                                 }
                                 
-                                // Delay actual closing to allow animation to complete
-                                DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
+                                DispatchQueue.main.asyncAfter(deadline: .now() + AppTheme.disappearDuration) {
                                     window.close()
                                 }
                             }
@@ -639,6 +783,7 @@ struct ResponseView: View {
                         }
                         .buttonStyle(BorderlessButtonStyle())
                         .contentShape(Rectangle())
+                        .keyboardShortcut(.escape, modifiers: [])
                     }
                     .padding(.trailing, 16)
                 }
@@ -648,7 +793,6 @@ struct ResponseView: View {
                 .gesture(
                     DragGesture()
                         .onChanged { value in
-                            // Move the window when dragging the title bar
                             if let window = NSApplication.shared.windows.first(where: {
                                 $0.identifier == NSUserInterfaceItemIdentifier("GPTResponseWindow")
                             }) {
@@ -664,26 +808,47 @@ struct ResponseView: View {
                 Divider()
                     .padding(.horizontal, 12)
                 
-                // Response content
-                ScrollView {
-                    Text(responseText)
-                        .padding(16)
-                        .textSelection(.enabled)
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                        .animation(.spring(response: 0.3, dampingFraction: 0.7), value: responseText)
-                        .font(.system(size: 14))
+                // Response content with conditional view based on selected view mode
+                if selectedMarkdownView {
+                    ScrollView {
+                        Text(LocalizedStringKey(responseText))
+                            .padding(16)
+                            .textSelection(.enabled)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .font(.system(size: fontSize))
+                    }
+                    .background(Color(.textBackgroundColor).opacity(0.3))
+                    .cornerRadius(12)
+                    .padding(12)
+                } else {
+                    ScrollView {
+                        Text(responseText)
+                            .padding(16)
+                            .textSelection(.enabled)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .font(.system(size: fontSize, design: .monospaced))
+                    }
+                    .background(Color(.textBackgroundColor).opacity(0.3))
+                    .cornerRadius(12)
+                    .padding(12)
                 }
-                .background(Color(.textBackgroundColor).opacity(0.3))
-                .cornerRadius(12)
-                .padding(12)
+                
+                // Footer with keyboard shortcuts reference
+                HStack {
+                    Text("⌘C to copy • ESC to close")
+                        .font(.system(size: 10))
+                        .foregroundColor(.secondary)
+                }
+                .frame(maxWidth: .infinity, alignment: .center)
+                .padding(.bottom, 8)
             }
         }
-        .frame(width: 600, height: 400)
+        .frame(width: 700, height: 500)
         .opacity(opacity)
         .offset(y: yOffset)
         .onAppear {
             // Animate appearance
-            withAnimation(.spring(response: 0.4, dampingFraction: 0.7)) {
+            withAnimation(.spring(response: AppTheme.appearDuration, dampingFraction: 0.7)) {
                 opacity = 1
                 yOffset = 0
             }
@@ -691,7 +856,7 @@ struct ResponseView: View {
     }
 }
 
-// Helper view for NSVisualEffectView
+// MARK: - Visual Effect View Helper
 struct VisualEffectView: NSViewRepresentable {
     let material: NSVisualEffectView.Material
     let blendingMode: NSVisualEffectView.BlendingMode
@@ -710,11 +875,11 @@ struct VisualEffectView: NSViewRepresentable {
     }
 }
 
-// Preferences window controller
+// MARK: - Preferences
 class PreferencesWindowController: NSWindowController {
     init() {
         let window = NSWindow(
-            contentRect: NSRect(x: 0, y: 0, width: 500, height: 300),
+            contentRect: NSRect(x: 0, y: 0, width: 550, height: 350),
             styleMask: [.titled, .closable, .miniaturizable],
             backing: .buffered,
             defer: false
@@ -735,79 +900,170 @@ class PreferencesWindowController: NSWindowController {
     }
 }
 
-// SwiftUI view for preferences
 struct PreferencesView: View {
     @AppStorage("GPTAPIKey") private var apiKey = ""
     @AppStorage("GPTEndpoint") private var endpoint = "https://api.openai.com/v1/chat/completions"
     @AppStorage("GPTModel") private var model = "gpt-4"
+    @AppStorage("SystemPrompt") private var systemPrompt = "You are a helpful assistant responding to queries from a menu bar app."
     @State private var isApiKeyVisible = false
+    @State private var selectedTab = 0
+    @State private var modelOptions = ["gpt-4", "gpt-4o", "gpt-3.5-turbo", "claude-3-opus", "claude-3-sonnet"]
     
     var body: some View {
-        TabView {
+        TabView(selection: $selectedTab) {
+            // API Settings
             Form {
-                Section(header: Text("API Settings")) {
-                    TextField("API Endpoint", text: $endpoint)
-                        .textFieldStyle(RoundedBorderTextFieldStyle())
-                    
-                    HStack {
-                        if isApiKeyVisible {
-                            TextField("API Key", text: $apiKey)
-                                .textFieldStyle(RoundedBorderTextFieldStyle())
-                        } else {
-                            SecureField("API Key", text: $apiKey)
-                                .textFieldStyle(RoundedBorderTextFieldStyle())
-                        }
+                Section(header: Text("API Configuration").font(.headline)) {
+                    VStack(alignment: .leading, spacing: 6) {
+                        Text("API Endpoint")
+                            .font(.system(size: 12, weight: .medium))
                         
-                        Button(action: { isApiKeyVisible.toggle() }) {
-                            Image(systemName: isApiKeyVisible ? "eye.slash" : "eye")
-                        }
-                        .buttonStyle(PlainButtonStyle())
+                        TextField("API Endpoint", text: $endpoint)
+                            .textFieldStyle(RoundedBorderTextFieldStyle())
+                            .font(.system(size: 14))
                     }
+                    .padding(.bottom, 8)
                     
-                    TextField("Model", text: $model)
-                        .textFieldStyle(RoundedBorderTextFieldStyle())
+                    VStack(alignment: .leading, spacing: 6) {
+                        Text("API Key")
+                            .font(.system(size: 12, weight: .medium))
+                        
+                        HStack {
+                            if isApiKeyVisible {
+                                TextField("API Key", text: $apiKey)
+                                    .textFieldStyle(RoundedBorderTextFieldStyle())
+                                    .font(.system(size: 14))
+                            } else {
+                                SecureField("API Key", text: $apiKey)
+                                    .textFieldStyle(RoundedBorderTextFieldStyle())
+                                    .font(.system(size: 14))
+                            }
+                            
+                            Button(action: { isApiKeyVisible.toggle() }) {
+                                Image(systemName: isApiKeyVisible ? "eye.slash" : "eye")
+                            }
+                            .buttonStyle(PlainButtonStyle())
+                        }
+                    }
+                    .padding(.bottom, 8)
+                    
+                    VStack(alignment: .leading, spacing: 6) {
+                        Text("Model")
+                            .font(.system(size: 12, weight: .medium))
+                        
+                        HStack {
+                            Picker("", selection: $model) {
+                                ForEach(modelOptions, id: \.self) { modelOption in
+                                    Text(modelOption).tag(modelOption)
+                                }
+                            }
+                            .labelsHidden()
+                            
+                            TextField("Custom model", text: $model)
+                                .textFieldStyle(RoundedBorderTextFieldStyle())
+                                .font(.system(size: 14))
+                        }
+                    }
+                    .padding(.bottom, 8)
+                    
+                    VStack(alignment: .leading, spacing: 6) {
+                        Text("System Prompt")
+                            .font(.system(size: 12, weight: .medium))
+                        
+                        TextEditor(text: $systemPrompt)
+                            .font(.system(size: 14))
+                            .frame(height: 80)
+                            .border(Color.gray.opacity(0.2))
+                    }
                 }
                 
-                Section(header: Text("Shortcut")) {
-                    KeyboardShortcuts.Recorder(for: .togglePromptWindow)
+                Section(header: Text("Keyboard Shortcut").font(.headline)) {
+                    HStack {
+                        Text("Toggle App")
+                            .font(.system(size: 12, weight: .medium))
+                        Spacer()
+                        KeyboardShortcuts.Recorder(for: .togglePromptWindow)
+                    }
+                    .padding(.top, 8)
                 }
             }
             .padding()
             .tabItem {
                 Label("General", systemImage: "gear")
             }
+            .tag(0)
             
+            // Appearance tab
+            VStack(spacing: 20) {
+                Text("Appearance settings will be added in a future update.")
+                    .foregroundColor(.secondary)
+            }
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .tabItem {
+                Label("Appearance", systemImage: "paintbrush")
+            }
+            .tag(1)
+            
+            // History tab
+            VStack(spacing: 20) {
+                Text("Conversation history will be added in a future update.")
+                    .foregroundColor(.secondary)
+            }
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .tabItem {
+                Label("History", systemImage: "clock")
+            }
+            .tag(2)
+            
+            // About tab
             AboutView()
                 .tabItem {
                     Label("About", systemImage: "info.circle")
                 }
+                .tag(3)
         }
-        .frame(width: 500, height: 300)
+        .padding(20)
+        .frame(width: 550, height: 350)
     }
 }
 
-// SwiftUI view for About tab
+// MARK: - About View
 struct AboutView: View {
     var body: some View {
         VStack(spacing: 20) {
-            Image(systemName: "brain")
-                .font(.system(size: 64))
-                .foregroundColor(.blue)
+            VStack(spacing: 8) {
+                Image(systemName: "brain.head.profile")
+                    .font(.system(size: 64))
+                    .foregroundColor(AppTheme.primaryColor)
+                
+                Text("GPT Menu Bar")
+                    .font(.system(size: 28, weight: .bold))
+                
+                Text("Version 1.1.0")
+                    .foregroundColor(.secondary)
+                    .font(.system(size: 14))
+            }
             
-            Text("GPT Menu Bar")
-                .font(.largeTitle)
-                .bold()
+            VStack(spacing: 10) {
+                Text("A sleek menu bar app for quick access to AI assistants")
+                    .multilineTextAlignment(.center)
+                    .fixedSize(horizontal: false, vertical: true)
+                
+                Text("Works with OpenAI GPT models and compatible API endpoints")
+                    .font(.system(size: 14))
+                    .foregroundColor(.secondary)
+                    .multilineTextAlignment(.center)
+            }
+            .padding(.horizontal, 20)
             
-            Text("Version 1.0")
+            Divider()
+                .padding(.vertical, 10)
+            
+            Text("© 2025 • All Rights Reserved")
+                .font(.system(size: 12))
                 .foregroundColor(.secondary)
-            
-            Text("A simple menu bar app to interact with GPT models")
-                .multilineTextAlignment(.center)
-                .padding(.horizontal)
-            
-            Spacer()
         }
-        .padding(.top, 40)
+        .padding(30)
         .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
 }
