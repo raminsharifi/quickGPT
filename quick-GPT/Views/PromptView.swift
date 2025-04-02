@@ -8,8 +8,36 @@ import AppKit
 import SwiftUI
 
 struct PromptView: View {
-    enum Mode {
+    enum Mode: Equatable {
         case gpt, search
+        
+        var icon: String {
+            switch self {
+            case .gpt: return "brain.head.profile"
+            case .search: return "magnifyingglass"
+            }
+        }
+        
+        var color: Color {
+            switch self {
+            case .gpt: return AppTheme.primaryColor
+            case .search: return Color.orange
+            }
+        }
+        
+        var placeholderText: String {
+            switch self {
+            case .gpt: return "Ask GPT something..."
+            case .search: return "Search DuckDuckGo..."
+            }
+        }
+        
+        var submitIcon: String {
+            switch self {
+            case .gpt: return "paperplane.fill"
+            case .search: return "arrow.right.circle.fill"
+            }
+        }
     }
     
     @State private var promptText = ""
@@ -20,7 +48,18 @@ struct PromptView: View {
     @State private var opacity: Double = 0
     @State private var yOffset: CGFloat = 20
     @State private var mode: Mode = .gpt
+    @State private var previousMode: Mode = .gpt
+    @State private var tabIndicatorOffset: CGFloat = 0
+    @State private var iconRotation: Double = 0
+    @State private var iconScale: CGFloat = 1.0
     @EnvironmentObject private var coordinator: PromptCoordinator
+    
+    // Constants for layout and animations
+    private let tabWidth: CGFloat = 80
+    private let tabPadding: CGFloat = 16
+    private let tabAnimationDuration: Double = 0.3
+    private let tabIndicatorHeight: CGFloat = 2
+    private let iconAnimationDuration: Double = 0.25
     
     func forceFocus() {
         self.isTextFieldFocused = true
@@ -28,7 +67,7 @@ struct PromptView: View {
     
     var body: some View {
         ZStack {
-            // Background
+            // Background with glass effect
             RoundedRectangle(cornerRadius: AppTheme.cornerRadius)
                 .fill(Color(.windowBackgroundColor).opacity(AppTheme.backgroundOpacity))
                 .background(
@@ -58,34 +97,79 @@ struct PromptView: View {
                     )
                 })
                 
-                // Mode selector tabs
-                HStack(spacing: 0) {
-                    ModeTabButton(title: "GPT", systemImage: "brain.head.profile", isSelected: mode == .gpt) {
-                        mode = .gpt
+                // Mode selector tabs with animated indicator
+                VStack(spacing: 0) {
+                    // Tab buttons first
+                    HStack(spacing: 0) {
+                        ForEach([Mode.gpt, Mode.search], id: \.self) { tabMode in
+                            ModeTabButton(title: tabMode == .gpt ? "GPT" : "Search", 
+                                         systemImage: tabMode.icon,
+                                         isSelected: mode == tabMode) {
+                                withAnimation(.spring(response: tabAnimationDuration, dampingFraction: 0.7)) {
+                                    previousMode = mode
+                                    mode = tabMode
+                                    // No offset manipulation here
+                                    
+                                    // Animate icon transition
+                                    iconRotation += 180
+                                    iconScale = 0.5
+                                    
+                                    // Reset icon scale after rotation
+                                    DispatchQueue.main.asyncAfter(deadline: .now() + iconAnimationDuration) {
+                                        withAnimation(.spring(response: iconAnimationDuration, dampingFraction: 0.7)) {
+                                            iconScale = 1.0
+                                        }
+                                    }
+                                }
+                            }
+                            .frame(width: tabWidth)
+                            .overlay(
+                                // Place indicator directly under each tab
+                                Rectangle()
+                                    .fill(mode == tabMode ? mode.color : Color.clear)
+                                    .frame(width: tabWidth * 0.7, height: tabIndicatorHeight)
+                                    .offset(y: 14) // Position below the text
+                                    .animation(.spring(response: tabAnimationDuration, dampingFraction: 0.7), value: mode)
+                                , alignment: .bottom
+                            )
+                        }
                     }
-                    
-                    ModeTabButton(title: "Search", systemImage: "magnifyingglass", isSelected: mode == .search) {
-                        mode = .search
-                    }
+                    .padding(.horizontal, tabPadding)
+                    .padding(.top, 8)
+                    .padding(.bottom, 10)
                 }
-                .padding(.horizontal, 16)
-                .padding(.bottom, 4)
                 
+                // Input field area
                 HStack {
-                    // Icon based on current mode
-                    Image(systemName: mode == .gpt ? "brain.head.profile" : "magnifyingglass")
-                        .foregroundColor(mode == .gpt ? AppTheme.primaryColor : Color.orange)
-                        .font(.system(size: AppTheme.iconSize, weight: .medium))
-                        .padding(.leading, 16)
-                        .shimmering(active: isLoading)
+                    // Animated icon with mode-specific styling
+                    ZStack {
+                        if previousMode != mode {
+                            Image(systemName: previousMode.icon)
+                                .foregroundColor(previousMode.color)
+                                .font(.system(size: AppTheme.iconSize, weight: .medium))
+                                .opacity(0.3)
+                                .scaleEffect(1.5)
+                                .rotationEffect(.degrees(-iconRotation))
+                        }
+                        
+                        Image(systemName: mode.icon)
+                            .foregroundColor(mode.color)
+                            .font(.system(size: AppTheme.iconSize, weight: .medium))
+                            .rotationEffect(.degrees(iconRotation))
+                            .scaleEffect(iconScale)
+                            .animation(.spring(response: iconAnimationDuration, dampingFraction: 0.6), value: iconRotation)
+                    }
+                    .padding(.leading, 16)
+                    .shimmering(active: isLoading)
                     
                     // Main input field
                     ZStack(alignment: .leading) {
                         if promptText.isEmpty && !isTextFieldFocused {
-                            Text(mode == .gpt ? "Ask GPT something..." : "Search DuckDuckGo...")
+                            Text(mode.placeholderText)
                                 .foregroundColor(.gray)
                                 .font(AppTheme.fontRegular)
                                 .padding(.vertical, 12)
+                                .transition(.opacity)
                         }
                         
                         TextField("", text: $promptText, onCommit: handleSubmit)
@@ -93,13 +177,29 @@ struct PromptView: View {
                             .padding(.vertical, 12)
                             .focused($isTextFieldFocused)
                             .font(AppTheme.fontRegular)
+                            .foregroundColor(mode == .gpt ? .primary : mode.color.opacity(0.8))
                             .onExitCommand {
                                 if let window = NSApplication.shared.keyWindow {
                                     window.close()
                                 }
                             }
                             .onKeyPress(.tab) {
-                                mode = mode == .gpt ? .search : .gpt
+                                withAnimation(.spring(response: tabAnimationDuration, dampingFraction: 0.7)) {
+                                    previousMode = mode
+                                    mode = mode == .gpt ? .search : .gpt
+                                    tabIndicatorOffset = mode == .gpt ? 0 : tabWidth
+                                    
+                                    // Animate icon transition
+                                    iconRotation += 180
+                                    iconScale = 0.5
+                                    
+                                    // Reset icon scale after rotation
+                                    DispatchQueue.main.asyncAfter(deadline: .now() + iconAnimationDuration) {
+                                        withAnimation(.spring(response: iconAnimationDuration, dampingFraction: 0.7)) {
+                                            iconScale = 1.0
+                                        }
+                                    }
+                                }
                                 return .handled
                             }
                     }
@@ -114,7 +214,7 @@ struct PromptView: View {
                                     .foregroundColor(.gray)
                                     .font(.system(size: AppTheme.iconSize - 2))
                             }
-                            .buttonStyle(BorderlessButtonStyle())
+                            .buttonStyle(PlainButtonStyle())
                             .popover(isPresented: $showingRecentPrompts) {
                                 VStack(alignment: .leading, spacing: 8) {
                                     Text("Recent Prompts")
@@ -159,6 +259,7 @@ struct PromptView: View {
                                 }
                             }
                             .padding(.trailing, 4)
+                            .transition(.scale.combined(with: .opacity))
                         }
                     }
                     
@@ -169,23 +270,22 @@ struct PromptView: View {
                             .scaleEffect(0.8)
                             .padding(.trailing, 16)
                     } else if !promptText.isEmpty {
-                        // Submit button
-                        Button(action: handleSubmit) {
-                            Image(systemName: mode == .gpt ? "paperplane.fill" : "arrow.right.circle.fill")
-                                .foregroundColor(mode == .gpt ? AppTheme.primaryColor : Color.orange)
-                                .font(.system(size: AppTheme.iconSize, weight: .medium))
-                        }
-                        .buttonStyle(BorderlessButtonStyle())
+                        // Submit button with animated hover effect
+                        AnimatedSubmitButton(
+                            systemName: mode.submitIcon,
+                            color: mode.color,
+                            action: handleSubmit
+                        )
                         .padding(.trailing, 16)
-                        .contentShape(Rectangle())
                         .keyboardShortcut(.return, modifiers: .command)
                         .transition(.scale.combined(with: .opacity))
                     }
                 }
-                .padding(.bottom, 12)
+                .padding(.bottom, 14)
+                .padding(.top, 2)
             }
         }
-        .frame(width: 700, height: mode == .gpt ? 80 : 80) // Increased height to accommodate tabs
+        .frame(width: 700, height: 100)
         .opacity(opacity)
         .offset(y: yOffset)
         .onAppear {
@@ -414,29 +514,90 @@ struct PromptView: View {
     }
 }
 
-// Tab button for mode selection
+// Tab button for mode selection with enhanced visuals
 struct ModeTabButton: View {
     let title: String
     let systemImage: String
     let isSelected: Bool
     let action: () -> Void
     
+    @State private var isHovered = false
+    
     var body: some View {
         Button(action: action) {
-            HStack(spacing: 4) {
-                Image(systemName: systemImage)
-                    .font(.system(size: 12))
-                Text(title)
-                    .font(.system(size: 12, weight: isSelected ? .semibold : .regular))
+            VStack(spacing: 4) {
+                HStack(spacing: 6) {
+                    Image(systemName: systemImage)
+                        .font(.system(size: 12, weight: isSelected ? .semibold : .regular))
+                    
+                    Text(title)
+                        .font(.system(size: 13, weight: isSelected ? .semibold : .regular))
+                }
+                .padding(.vertical, 6)
+                .padding(.horizontal, 12)
+                .background(
+                    RoundedRectangle(cornerRadius: 6)
+                        .fill(
+                            isSelected ? 
+                                Color.gray.opacity(0.2) : 
+                                (isHovered ? Color.gray.opacity(0.1) : Color.clear)
+                        )
+                        .animation(.easeInOut(duration: 0.15), value: isHovered)
+                )
             }
-            .padding(.vertical, 4)
-            .padding(.horizontal, 8)
-            .background(
-                RoundedRectangle(cornerRadius: 6)
-                    .fill(isSelected ? Color.gray.opacity(0.2) : Color.clear)
-            )
         }
         .buttonStyle(PlainButtonStyle())
         .foregroundColor(isSelected ? .primary : .gray)
+        .onHover { hovering in
+            withAnimation(.easeInOut(duration: 0.2)) {
+                isHovered = hovering
+            }
+        }
+    }
+}
+
+// Animated submit button with hover and pulse effects
+struct AnimatedSubmitButton: View {
+    let systemName: String
+    let color: Color
+    let action: () -> Void
+    
+    @State private var isHovered = false
+    @State private var scale: CGFloat = 1.0
+    
+    var body: some View {
+        Button(action: {
+            // Scale animation on click
+            withAnimation(.spring(response: 0.2, dampingFraction: 0.6)) {
+                scale = 0.8
+            }
+            
+            // Delayed reset and action
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                withAnimation(.spring(response: 0.2, dampingFraction: 0.6)) {
+                    scale = 1.0
+                }
+                action()
+            }
+        }) {
+            Image(systemName: systemName)
+                .font(.system(size: AppTheme.iconSize, weight: .medium))
+                .foregroundColor(color)
+                .padding(8)
+                .background(
+                    Circle()
+                        .fill(color.opacity(isHovered ? 0.15 : 0.0))
+                        .animation(.easeInOut(duration: 0.2), value: isHovered)
+                )
+                .scaleEffect(scale)
+                .scaleEffect(isHovered ? 1.1 : 1.0)
+                .animation(.spring(response: 0.2, dampingFraction: 0.6), value: isHovered)
+        }
+        .buttonStyle(PlainButtonStyle())
+        .onHover { hovering in
+            withAnimation(.easeInOut(duration: 0.2)) {
+                isHovered = hovering
+            }
+        }
     }
 }
