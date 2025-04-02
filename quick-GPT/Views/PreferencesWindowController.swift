@@ -11,8 +11,8 @@ import KeyboardShortcuts
 class PreferencesWindowController: NSWindowController {
     init() {
         let window = NSWindow(
-            contentRect: NSRect(x: 0, y: 0, width: 550, height: 350),
-            styleMask: [.titled, .closable, .miniaturizable],
+            contentRect: NSRect(x: 0, y: 0, width: 650, height: 450),
+            styleMask: [.titled, .closable, .miniaturizable, .resizable],
             backing: .buffered,
             defer: false
         )
@@ -20,6 +20,7 @@ class PreferencesWindowController: NSWindowController {
         window.center()
         window.title = "Preferences"
         window.setFrameAutosaveName("Preferences Window")
+        window.minSize = NSSize(width: 550, height: 350)
         
         super.init(window: window)
         
@@ -42,6 +43,10 @@ struct PreferencesView: View {
     @State private var modelOptions = ["gpt-4", "gpt-4o", "gpt-3.5-turbo", "claude-3-opus", "claude-3-sonnet"]
     @State private var customModel = ""
     @State private var useCustomModel = false
+    @State private var conversations: [ConversationEntry] = []
+    @State private var selectedConversation: ConversationEntry?
+    @State private var showDeleteConfirmation = false
+    @State private var conversationToDelete: UUID?
     
     var body: some View {
         TabView(selection: $selectedTab) {
@@ -174,15 +179,125 @@ struct PreferencesView: View {
             .tag(1)
             
             // History tab
-            VStack(spacing: 20) {
-                Text("Conversation history will be added in a future update.")
-                    .foregroundColor(.secondary)
+            VStack(spacing: 0) {
+                HStack {
+                    Text("Conversation History")
+                        .font(.headline)
+                    
+                    Spacer()
+                    
+                    Button(action: {
+                        showDeleteConfirmation = true
+                    }) {
+                        Label("Clear All", systemImage: "trash")
+                            .foregroundColor(.red)
+                    }
+                    .buttonStyle(BorderlessButtonStyle())
+                    .disabled(conversations.isEmpty)
+                    .alert(isPresented: $showDeleteConfirmation) {
+                        Alert(
+                            title: Text("Clear All History"),
+                            message: Text("Are you sure you want to delete all conversation history? This cannot be undone."),
+                            primaryButton: .destructive(Text("Delete All")) {
+                                ConversationHistoryManager.shared.clearHistory()
+                                conversations = []
+                                selectedConversation = nil
+                            },
+                            secondaryButton: .cancel()
+                        )
+                    }
+                }
+                .padding(.horizontal)
+                .padding(.top)
+                
+                // Main content
+                if conversations.isEmpty {
+                    VStack(spacing: 20) {
+                        Spacer()
+                        Image(systemName: "text.bubble")
+                            .font(.system(size: 48))
+                            .foregroundColor(.gray)
+                        
+                        Text("No conversation history")
+                            .font(.headline)
+                        
+                        Text("Your conversations with GPT will appear here")
+                            .foregroundColor(.secondary)
+                            .multilineTextAlignment(.center)
+                        Spacer()
+                    }
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                } else {
+                    HSplitView {
+                        // Conversations list - Fixed implementation
+                        List {
+                            ForEach(conversations) { conversation in
+                                ConversationListItem(conversation: conversation)
+                                    .contentShape(Rectangle()) // Make entire row clickable
+                                    .onTapGesture {
+                                        selectedConversation = conversation
+                                    }
+                                    .background(
+                                        RoundedRectangle(cornerRadius: 4)
+                                            .fill(selectedConversation?.id == conversation.id ? 
+                                                  Color.blue.opacity(0.1) : Color.clear)
+                                    )
+                                    .contextMenu {
+                                        Button(action: {
+                                            conversationToDelete = conversation.id
+                                        }) {
+                                            Label("Delete", systemImage: "trash")
+                                        }
+                                    }
+                            }
+                        }
+                        .listStyle(SidebarListStyle())
+                        .frame(minWidth: 250)
+                        
+                        // Conversation detail
+                        if let selected = selectedConversation {
+                            ConversationDetailView(conversation: selected)
+                        } else {
+                            VStack {
+                                Spacer()
+                                Text("Select a conversation to view details")
+                                    .foregroundColor(.secondary)
+                                Spacer()
+                            }
+                            .frame(maxWidth: .infinity, maxHeight: .infinity)
+                        }
+                    }
+                    .alert(isPresented: Binding<Bool>(
+                        get: { conversationToDelete != nil },
+                        set: { if !$0 { conversationToDelete = nil } }
+                    )) {
+                        Alert(
+                            title: Text("Delete Conversation"),
+                            message: Text("Are you sure you want to delete this conversation?"),
+                            primaryButton: .destructive(Text("Delete")) {
+                                if let id = conversationToDelete {
+                                    ConversationHistoryManager.shared.deleteConversation(id: id)
+                                    conversations = ConversationHistoryManager.shared.conversations
+                                    if selectedConversation?.id == id {
+                                        selectedConversation = nil
+                                    }
+                                }
+                                conversationToDelete = nil
+                            },
+                            secondaryButton: .cancel {
+                                conversationToDelete = nil
+                            }
+                        )
+                    }
+                }
             }
-            .frame(maxWidth: .infinity, maxHeight: .infinity)
             .tabItem {
                 Label("History", systemImage: "clock")
             }
             .tag(2)
+            .onAppear {
+                conversations = ConversationHistoryManager.shared.conversations
+            }
             
             // About tab
             AboutView()
@@ -197,6 +312,111 @@ struct PreferencesView: View {
             if useCustomModel {
                 customModel = model
             }
+            
+            // Load conversations
+            conversations = ConversationHistoryManager.shared.conversations
         }
+    }
+}
+
+// Component for displaying a conversation in the list
+struct ConversationListItem: View {
+    let conversation: ConversationEntry
+    
+    var body: some View {
+        VStack(alignment: .leading, spacing: 4) {
+            Text(conversation.title)
+                .lineLimit(1)
+                .font(.system(size: 13, weight: .medium))
+            
+            HStack {
+                Text(formattedDate(conversation.timestamp))
+                    .font(.system(size: 11))
+                    .foregroundColor(.secondary)
+                
+                Spacer()
+                
+                Text(conversation.model)
+                    .font(.system(size: 10))
+                    .padding(.horizontal, 6)
+                    .padding(.vertical, 2)
+                    .background(Color.gray.opacity(0.2))
+                    .cornerRadius(4)
+            }
+        }
+        .padding(.vertical, 4)
+    }
+    
+    private func formattedDate(_ date: Date) -> String {
+        let formatter = DateFormatter()
+        formatter.dateStyle = .short
+        formatter.timeStyle = .short
+        return formatter.string(from: date)
+    }
+}
+
+// Component for displaying conversation details
+struct ConversationDetailView: View {
+    let conversation: ConversationEntry
+    
+    var body: some View {
+        ScrollView {
+            VStack(alignment: .leading, spacing: 20) {
+                HStack {
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text(formattedDate(conversation.timestamp))
+                            .font(.system(size: 12))
+                            .foregroundColor(.secondary)
+                        
+                        Text("Model: \(conversation.model)")
+                            .font(.system(size: 12, weight: .medium))
+                            .foregroundColor(.secondary)
+                    }
+                    
+                    Spacer()
+                    
+                    Button(action: {
+                        // Get all message content for copying
+                        let conversationText = conversation.messages
+                            .filter { $0.role != "system" } // Exclude system message
+                            .map { "\($0.role == "user" ? "User: " : "Assistant: ")\($0.content)" }
+                            .joined(separator: "\n\n")
+                        
+                        NSPasteboard.general.clearContents()
+                        NSPasteboard.general.setString(conversationText, forType: .string)
+                    }) {
+                        Label("Copy", systemImage: "doc.on.doc")
+                    }
+                    .buttonStyle(BorderlessButtonStyle())
+                }
+                .padding(.bottom, 8)
+                
+                // Display message history instead of single prompt/response
+                ForEach(Array(conversation.messages.enumerated()), id: \.offset) { index, message in
+                    if message.role != "system" { // Don't show system messages
+                        VStack(alignment: .leading, spacing: 6) {
+                            Text(message.role == "user" ? "User" : "Assistant")
+                                .font(.system(size: 12, weight: .semibold))
+                                .foregroundColor(.secondary)
+                            
+                            Text(message.content)
+                                .padding(10)
+                                .frame(maxWidth: .infinity, alignment: .leading)
+                                .background(message.role == "user" ? 
+                                    Color.blue.opacity(0.1) : Color.gray.opacity(0.1))
+                                .cornerRadius(8)
+                        }
+                    }
+                }
+            }
+            .padding()
+        }
+    }
+    
+    private func formattedDate(_ date: Date) -> String {
+        let formatter = DateFormatter()
+        formatter.dateStyle = .medium
+        formatter.timeStyle = .medium
+        return formatter.string(from: date)
     }
 }

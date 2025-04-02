@@ -152,6 +152,24 @@ class AppDelegate: NSObject, NSApplicationDelegate, PromptWindowDelegate {
         NSApplication.shared.activate(ignoringOtherApps: true)
     }
     
+    @objc func openPromptWithContinuation() {
+        promptWindowController = PromptWindowController(continuingConversation: true)
+        promptWindowController?.delegate = self
+        
+        promptWindowController?.showWindow(nil)
+        if let window = promptWindowController?.window {
+            window.makeKeyAndOrderFront(nil)
+        }
+        
+        NSApplication.shared.activate(ignoringOtherApps: true)
+        
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+            if let contentView = self.promptWindowController?.window?.contentView as? NSHostingView<PromptView> {
+                contentView.rootView.forceFocus()
+            }
+        }
+    }
+    
     // Updated to use EnhancedResponseWindowController
     func showResponse(text: String) {
         DispatchQueue.main.async {
@@ -177,9 +195,9 @@ class PromptWindowController: NSWindowController, NSWindowDelegate {
     weak var delegate: PromptWindowDelegate?
     private var promptCoordinator: PromptCoordinator!
     
-    init() {
+    init(continuingConversation: Bool = false) {
         let window = CustomWindow(
-            contentRect: NSRect(x: 0, y: 0, width: 700, height: 60),
+            contentRect: NSRect(x: 0, y: 0, width: 700, height: 100),
             styleMask: [.borderless],
             backing: .buffered,
             defer: false
@@ -200,7 +218,7 @@ class PromptWindowController: NSWindowController, NSWindowDelegate {
         promptCoordinator = PromptCoordinator()
         promptCoordinator.delegate = self
         
-        let promptView = PromptView()
+        let promptView = PromptView(continuingConversation: continuingConversation)
             .environmentObject(promptCoordinator)
         
         window.contentView = NSHostingView(rootView: promptView)

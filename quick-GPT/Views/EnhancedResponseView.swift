@@ -32,10 +32,19 @@ class EnhancedResponseWindowController: NSWindowController, NSWindowDelegate {
         let responseView = EnhancedResponseView(responseText: responseText, promptText: lastPrompt)
         window.contentView = NSHostingView(rootView: responseView)
         
-        // Set up escape key handling to close window
+        // Set up escape key handling to close window and Command+R for continuation
         eventMonitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { [weak self] event in
             if event.keyCode == 53 { // 53 is Escape
                 self?.window?.close()
+                return nil // Consume the event
+            } else if event.keyCode == 15 && event.modifierFlags.contains(.command) { // Command+R (15 is 'r')
+                // Close this window
+                self?.window?.close()
+                
+                // Open a new prompt window for continuation
+                if let appDelegate = NSApp.delegate as? AppDelegate {
+                    appDelegate.openPromptWithContinuation()
+                }
                 return nil // Consume the event
             }
             return event
@@ -59,6 +68,7 @@ class EnhancedResponseWindowController: NSWindowController, NSWindowDelegate {
         }
     }
 }
+
 // MARK: - Enhanced Response Window
 struct EnhancedResponseView: View {
     @State var responseText: String
@@ -82,7 +92,7 @@ struct EnhancedResponseView: View {
                 .shadow(color: Color.black.opacity(0.2), radius: AppTheme.shadowRadius, x: 0, y: 5)
             
             VStack(alignment: .leading, spacing: 0) {
-                // Title bar with controls (unchanged from original)
+                // Title bar with controls
                 HStack {
                     // Title and prompt info
                     VStack(alignment: .leading, spacing: 2) {
@@ -109,6 +119,36 @@ struct EnhancedResponseView: View {
                     
                     // Action buttons
                     HStack(spacing: 12) {
+                        // Continue conversation button
+                        Button(action: {
+                            // Open new prompt for continuation
+                            if let window = NSApplication.shared.windows.first(where: {
+                                $0.identifier == NSUserInterfaceItemIdentifier("GPTResponseWindow")
+                            }) {
+                                window.close()
+                                
+                                if let appDelegate = NSApp.delegate as? AppDelegate {
+                                    appDelegate.openPromptWithContinuation()
+                                }
+                            }
+                        }) {
+                            HStack(spacing: 4) {
+                                Image(systemName: "arrow.right.circle")
+                                    .font(.system(size: 12))
+                                Text("Continue")
+                                    .font(.system(size: 12, weight: .medium))
+                            }
+                            .padding(.horizontal, 8)
+                            .padding(.vertical, 4)
+                            .background(
+                                Capsule()
+                                    .fill(AppTheme.primaryColor.opacity(0.1))
+                            )
+                            .foregroundColor(AppTheme.primaryColor)
+                        }
+                        .buttonStyle(BorderlessButtonStyle())
+                        .keyboardShortcut("r", modifiers: .command)
+                        
                         // Font size controls
                         Group {
                             Button(action: { fontSize = max(fontSize - 1, 10) }) {
@@ -207,7 +247,7 @@ struct EnhancedResponseView: View {
                 Divider()
                     .padding(.horizontal, 12)
                 
-                // Enhanced response content with code block support
+                // Response content
                 if selectedMarkdownView {
                     ScrollView {
                         VStack(alignment: .leading, spacing: 8) {
@@ -222,7 +262,7 @@ struct EnhancedResponseView: View {
                     .cornerRadius(12)
                     .padding(12)
                 } else {
-                    // Plain text view remains the same
+                    // Plain text view
                     ScrollView {
                         Text(responseText)
                             .padding(16)
@@ -235,9 +275,9 @@ struct EnhancedResponseView: View {
                     .padding(12)
                 }
                 
-                // Footer with keyboard shortcuts reference
+                // Footer with keyboard shortcuts
                 HStack {
-                    Text("⌘C to copy • ESC to close")
+                    Text("⌘C to copy • ⌘R to continue • ESC to close")
                         .font(.system(size: 10))
                         .foregroundColor(.secondary)
                 }
@@ -249,7 +289,7 @@ struct EnhancedResponseView: View {
         .opacity(opacity)
         .offset(y: yOffset)
         .onAppear {
-            // Parse content blocks
+            // Process response text into content blocks
             contentBlocks = ContentParser.parseContent(responseText)
             
             // Animate appearance

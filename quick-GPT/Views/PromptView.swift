@@ -53,6 +53,8 @@ struct PromptView: View {
     @State private var iconRotation: Double = 0
     @State private var iconScale: CGFloat = 1.0
     @EnvironmentObject private var coordinator: PromptCoordinator
+    @State private var isContinuingMessage = false
+    @State private var continuationHint = ""
     
     // Constants for layout and animations
     private let tabWidth: CGFloat = 80
@@ -60,6 +62,12 @@ struct PromptView: View {
     private let tabAnimationDuration: Double = 0.3
     private let tabIndicatorHeight: CGFloat = 2
     private let iconAnimationDuration: Double = 0.25
+    
+    let continuingConversation: Bool
+    
+    init(continuingConversation: Bool = false) {
+        self.continuingConversation = continuingConversation
+    }
     
     func forceFocus() {
         self.isTextFieldFocused = true
@@ -143,67 +151,73 @@ struct PromptView: View {
                 
                 // Input field area
                 HStack {
-                    // Animated icon with mode-specific styling
+                    // Icon with pulsing animation when loading
                     ZStack {
-                        if previousMode != mode {
-                            Image(systemName: previousMode.icon)
-                                .foregroundColor(previousMode.color)
-                                .font(.system(size: AppTheme.iconSize, weight: .medium))
-                                .opacity(0.3)
-                                .scaleEffect(1.5)
-                                .rotationEffect(.degrees(-iconRotation))
-                        }
-                        
                         Image(systemName: mode.icon)
                             .foregroundColor(mode.color)
                             .font(.system(size: AppTheme.iconSize, weight: .medium))
-                            .rotationEffect(.degrees(iconRotation))
-                            .scaleEffect(iconScale)
-                            .animation(.spring(response: iconAnimationDuration, dampingFraction: 0.6), value: iconRotation)
+                            .padding(.leading, 16)
+                            .shimmering(active: isLoading)
+                        
+                        // Show chat indicator when continuing a conversation
+                        if isContinuingMessage && mode == .gpt {
+                            Image(systemName: "bubble.left.and.bubble.right.fill")
+                                .foregroundColor(AppTheme.primaryColor.opacity(0.4))
+                                .font(.system(size: AppTheme.iconSize - 6))
+                                .offset(x: 10, y: -8)
+                        }
                     }
-                    .padding(.leading, 16)
-                    .shimmering(active: isLoading)
                     
                     // Main input field
-                    ZStack(alignment: .leading) {
-                        if promptText.isEmpty && !isTextFieldFocused {
-                            Text(mode.placeholderText)
+                    VStack(alignment: .leading, spacing: 0) {
+                        // Show continuation hint if present
+                        if isContinuingMessage && !continuationHint.isEmpty {
+                            Text(continuationHint)
+                                .font(.system(size: 10))
                                 .foregroundColor(.gray)
-                                .font(AppTheme.fontRegular)
-                                .padding(.vertical, 12)
-                                .transition(.opacity)
+                                .padding(.bottom, 2)
                         }
                         
-                        TextField("", text: $promptText, onCommit: handleSubmit)
-                            .textFieldStyle(PlainTextFieldStyle())
-                            .padding(.vertical, 12)
-                            .focused($isTextFieldFocused)
-                            .font(AppTheme.fontRegular)
-                            .foregroundColor(mode == .gpt ? .primary : mode.color.opacity(0.8))
-                            .onExitCommand {
-                                if let window = NSApplication.shared.keyWindow {
-                                    window.close()
-                                }
+                        ZStack(alignment: .leading) {
+                            if promptText.isEmpty && !isTextFieldFocused {
+                                Text(mode.placeholderText)
+                                    .foregroundColor(.gray)
+                                    .font(AppTheme.fontRegular)
+                                    .padding(.vertical, 12)
+                                    .transition(.opacity)
                             }
-                            .onKeyPress(.tab) {
-                                withAnimation(.spring(response: tabAnimationDuration, dampingFraction: 0.7)) {
-                                    previousMode = mode
-                                    mode = mode == .gpt ? .search : .gpt
-                                    tabIndicatorOffset = mode == .gpt ? 0 : tabWidth
-                                    
-                                    // Animate icon transition
-                                    iconRotation += 180
-                                    iconScale = 0.5
-                                    
-                                    // Reset icon scale after rotation
-                                    DispatchQueue.main.asyncAfter(deadline: .now() + iconAnimationDuration) {
-                                        withAnimation(.spring(response: iconAnimationDuration, dampingFraction: 0.7)) {
-                                            iconScale = 1.0
-                                        }
+                            
+                            TextField("", text: $promptText, onCommit: handleSubmit)
+                                .textFieldStyle(PlainTextFieldStyle())
+                                .padding(.vertical, 12)
+                                .focused($isTextFieldFocused)
+                                .font(AppTheme.fontRegular)
+                                .foregroundColor(mode == .gpt ? .primary : mode.color.opacity(0.8))
+                                .onExitCommand {
+                                    if let window = NSApplication.shared.keyWindow {
+                                        window.close()
                                     }
                                 }
-                                return .handled
-                            }
+                                .onKeyPress(.tab) {
+                                    withAnimation(.spring(response: tabAnimationDuration, dampingFraction: 0.7)) {
+                                        previousMode = mode
+                                        mode = mode == .gpt ? .search : .gpt
+                                        tabIndicatorOffset = mode == .gpt ? 0 : tabWidth
+                                        
+                                        // Animate icon transition
+                                        iconRotation += 180
+                                        iconScale = 0.5
+                                        
+                                        // Reset icon scale after rotation
+                                        DispatchQueue.main.asyncAfter(deadline: .now() + iconAnimationDuration) {
+                                            withAnimation(.spring(response: iconAnimationDuration, dampingFraction: 0.7)) {
+                                                iconScale = 1.0
+                                            }
+                                        }
+                                    }
+                                    return .handled
+                                }
+                        }
                     }
                     
                     if !promptText.isEmpty {
@@ -299,9 +313,35 @@ struct PromptView: View {
             // Load recent prompts
             recentPrompts = UserDefaults.standard.stringArray(forKey: "RecentPrompts") ?? []
             
+            // Set continuing conversation indicator
+            if continuingConversation {
+                mode = .gpt // Force GPT mode when continuing
+                if let currentConversation = ConversationHistoryManager.shared.currentConversation {
+                    promptText = "Continuing conversation... Type your follow-up question."
+                    
+                    // Show a hint about the previous context
+                    if let lastResponse = currentConversation.lastAssistantResponse?.prefix(50) {
+                        let truncatedResponse = String(lastResponse) + (currentConversation.lastAssistantResponse!.count > 50 ? "..." : "")
+                        isContinuingMessage = true
+                        continuationHint = "Last response: \"\(truncatedResponse)\""
+                    }
+                }
+            }
+            
             // Focus on the text field
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
                 isTextFieldFocused = true
+                
+                // Select all text if we're continuing a conversation
+                if continuingConversation {
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
+                        // Use nil as an argument to firstResponder
+                        let textView = firstResponder(nil)
+                        if let textView = textView {
+                            textView.selectAll(nil)
+                        }
+                    }
+                }
             }
         }
         .onDisappear {
@@ -379,24 +419,6 @@ struct PromptView: View {
         }
     }
     
-    private func saveToRecentPrompts(prompt: String) {
-        var prompts = UserDefaults.standard.stringArray(forKey: "RecentPrompts") ?? []
-        
-        // Remove if already exists to avoid duplicates
-        prompts.removeAll(where: { $0 == prompt })
-        
-        // Add to the beginning
-        prompts.insert(prompt, at: 0)
-        
-        // Keep only the 15 most recent
-        if prompts.count > 15 {
-            prompts = Array(prompts.prefix(15))
-        }
-        
-        UserDefaults.standard.set(prompts, forKey: "RecentPrompts")
-        self.recentPrompts = prompts
-    }
-    
     private func requestGPTResponse(prompt: String) async throws -> String {
         // Network connectivity check
         guard let reachable = try? await checkNetworkConnectivity() else {
@@ -425,13 +447,38 @@ struct PromptView: View {
         request.addValue("Bearer \(apiKey)", forHTTPHeaderField: "Authorization")
         request.timeoutInterval = 45 // Increased timeout
         
-        // Request body with system message for better responses
+        // Request body with messages based on conversation history
+        var messages: [[String: String]] = []
+        
+        // Include conversation history if continuing a conversation
+        if let current = ConversationHistoryManager.shared.currentConversation {
+            // Add system message
+            if let systemMessage = current.messages.first(where: { $0.role == "system" }) {
+                messages.append(["role": "system", "content": systemMessage.content])
+            } else {
+                // Fallback to default system message
+                messages.append(["role": "system", "content": UserDefaults.standard.string(forKey: "SystemPrompt") ?? "You are a helpful assistant responding to queries from a menu bar app."])
+            }
+            
+            // Add previous messages (excluding system message)
+            for message in current.messages.filter({ $0.role != "system" }) {
+                messages.append(["role": message.role, "content": message.content])
+            }
+            
+            // Add the new user prompt
+            messages.append(["role": "user", "content": prompt])
+        } else {
+            // New conversation, just include system message and current prompt
+            messages = [
+                ["role": "system", "content": UserDefaults.standard.string(forKey: "SystemPrompt") ?? "You are a helpful assistant responding to queries from a menu bar app."],
+                ["role": "user", "content": prompt]
+            ]
+        }
+        
+        // Update request body
         let requestBody: [String: Any] = [
             "model": UserDefaults.standard.string(forKey: "GPTModel") ?? "gpt-4",
-            "messages": [
-                ["role": "system", "content": "You are a helpful assistant responding to queries from a menu bar app."],
-                ["role": "user", "content": prompt]
-            ],
+            "messages": messages,
             "temperature": 0.7
         ]
         
@@ -460,7 +507,29 @@ struct PromptView: View {
             
             // Parse response
             let gptResponse = try JSONDecoder().decode(GPTResponse.self, from: data)
-            return gptResponse.choices.first?.message.content ?? "No response content received"
+            let responseContent = gptResponse.choices.first?.message.content ?? "No response content received"
+            
+            // Save to conversation history (only do this here, not in sendPrompt)
+            let systemPrompt = UserDefaults.standard.string(forKey: "SystemPrompt") ?? "You are a helpful assistant responding to queries from a menu bar app."
+            
+            // We need to check if this is a new conversation or continuing an existing one
+            if let current = ConversationHistoryManager.shared.currentConversation {
+                // Continue existing conversation
+                ConversationHistoryManager.shared.continueConversation(
+                    conversationId: current.id,
+                    userPrompt: prompt,
+                    response: responseContent
+                )
+            } else {
+                // Start new conversation
+                ConversationHistoryManager.shared.startNewConversation(
+                    systemPrompt: systemPrompt,
+                    userPrompt: prompt,
+                    response: responseContent
+                )
+            }
+            
+            return responseContent
         } catch let decodingError as DecodingError {
             return "Error parsing response: \(decodingError.localizedDescription)"
         } catch {
@@ -513,6 +582,41 @@ struct PromptView: View {
         }
         
         throw lastError ?? URLError(.unknown)
+    }
+    
+    // Add this function to find the first responder
+    func firstResponder(_ window: NSWindow?) -> NSTextView? {
+        let window = window ?? NSApplication.shared.keyWindow
+        guard let contentView = window?.contentView else { return nil }
+        
+        // Try to find the NSTextView that is the first responder
+        var responder = contentView.window?.firstResponder
+        while responder != nil {
+            if let textView = responder as? NSTextView {
+                return textView
+            }
+            responder = responder?.nextResponder
+        }
+        
+        return nil
+    }
+    
+    private func saveToRecentPrompts(prompt: String) {
+        var prompts = UserDefaults.standard.stringArray(forKey: "RecentPrompts") ?? []
+        
+        // Remove if already exists to avoid duplicates
+        prompts.removeAll(where: { $0 == prompt })
+        
+        // Add to the beginning
+        prompts.insert(prompt, at: 0)
+        
+        // Keep only the 15 most recent
+        if prompts.count > 15 {
+            prompts = Array(prompts.prefix(15))
+        }
+        
+        UserDefaults.standard.set(prompts, forKey: "RecentPrompts")
+        self.recentPrompts = prompts
     }
 }
 

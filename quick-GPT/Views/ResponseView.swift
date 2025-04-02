@@ -56,6 +56,35 @@ struct ResponseView: View {
                     
                     // Action buttons
                     HStack(spacing: 12) {
+                        // Continue conversation button
+                        Button(action: {
+                            if let window = NSApplication.shared.windows.first(where: {
+                                $0.identifier == NSUserInterfaceItemIdentifier("GPTResponseWindow")
+                            }) {
+                                window.close()
+                                
+                                // Open prompt window with current conversation
+                                let appDelegate = NSApp.delegate as? AppDelegate
+                                appDelegate?.openPromptWithContinuation()
+                            }
+                        }) {
+                            HStack(spacing: 4) {
+                                Image(systemName: "arrow.right.circle")
+                                    .font(.system(size: 12))
+                                Text("Continue")
+                                    .font(.system(size: 12, weight: .medium))
+                            }
+                            .padding(.horizontal, 8)
+                            .padding(.vertical, 4)
+                            .background(
+                                Capsule()
+                                    .fill(AppTheme.primaryColor.opacity(0.1))
+                            )
+                            .foregroundColor(AppTheme.primaryColor)
+                        }
+                        .buttonStyle(BorderlessButtonStyle())
+                        .keyboardShortcut("r", modifiers: .command)
+                        
                         // Font size controls
                         Group {
                             Button(action: { fontSize = max(fontSize - 1, 10) }) {
@@ -181,7 +210,7 @@ struct ResponseView: View {
                 
                 // Footer with keyboard shortcuts reference
                 HStack {
-                    Text("⌘C to copy • ESC to close")
+                    Text("⌘C to copy • ⌘R to continue • ESC to close")
                         .font(.system(size: 10))
                         .foregroundColor(.secondary)
                 }
