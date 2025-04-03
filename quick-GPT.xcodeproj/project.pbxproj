@@ -34,6 +34,7 @@
 		109861002D9D88C5002F0D4F /* quick-GPT.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "quick-GPT.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		1098610E2D9D88C6002F0D4F /* quick-GPTTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "quick-GPTTests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
 		109861182D9D88C6002F0D4F /* quick-GPTUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "quick-GPTUITests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
+		10A2B1542D9EF67E002A2EDA /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		10A7BF212D9DABDE00EAAC01 /* FullCodeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FullCodeView.swift; sourceTree = "<group>"; };
 		10A7BF252D9DAC3100EAAC01 /* ResponseWindowController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ResponseWindowController.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -92,6 +93,7 @@
 				109861012D9D88C5002F0D4F /* Products */,
 				10A7BF212D9DABDE00EAAC01 /* FullCodeView.swift */,
 				10A7BF252D9DAC3100EAAC01 /* ResponseWindowController.swift */,
+				10A2B1542D9EF67E002A2EDA /* Info.plist */,
 			);
 			sourceTree = "<group>";
 		};
@@ -413,6 +415,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				ASSETCATALOG_COMPILER_INCLUDE_ALL_APPICON_ASSETS = YES;
 				CODE_SIGN_ENTITLEMENTS = "quick-GPT/quick_GPT.entitlements";
 				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
@@ -421,11 +424,12 @@
 				DEVELOPMENT_TEAM = 5GG57Z8282;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.productivity";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 				);
+				MACOSX_DEPLOYMENT_TARGET = 14.6;
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = "raminsharifi.quick-GPT";
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -440,19 +444,22 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
-				CODE_SIGN_ENTITLEMENTS = "quick-GPT/quick_GPT.entitlements";
+				ASSETCATALOG_COMPILER_INCLUDE_ALL_APPICON_ASSETS = YES;
+				CODE_SIGN_ENTITLEMENTS = "quick-GPT/quick-GPTRelease.entitlements";
 				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = 5GG57Z8282;
+				ENABLE_HARDENED_RUNTIME = YES;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.productivity";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 				);
+				MACOSX_DEPLOYMENT_TARGET = 14.6;
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = "raminsharifi.quick-GPT";
 				PRODUCT_NAME = "$(TARGET_NAME)";
